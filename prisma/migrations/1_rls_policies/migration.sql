@@ -6,6 +6,22 @@
 -- Each authenticated user is strictly isolated to their own records.
 -- ==============================================================================
 
+-- 0. Ensure auth schema, roles, and auth.uid() exist for shadow database compatibility
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+    CREATE ROLE authenticated;
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+    CREATE ROLE anon;
+  END IF;
+END $$;
+
+CREATE SCHEMA IF NOT EXISTS "auth";
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$
+  SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid;
+$$ LANGUAGE sql STABLE;
+
 -- 1. Profiles Table
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
