@@ -15,9 +15,10 @@ export async function getExpensesForRange(params: {
         lte: params.endDate,
       },
     },
-    orderBy: {
-      spentOn: "desc",
-    },
+    orderBy: [
+      { spentOn: "desc" },
+      { createdAt: "desc" },
+    ],
   });
 }
 
@@ -26,11 +27,33 @@ export async function createExpense(params: {
   spentOn: Date;
   category: ExpenseCategory;
   amountMinor: number;
-  note?: string;
+  note?: string | null;
 }) {
   return prisma.expense.create({
     data: {
       userId: params.userId,
+      spentOn: params.spentOn,
+      category: params.category,
+      amountMinor: params.amountMinor,
+      note: params.note,
+    },
+  });
+}
+
+export async function updateExpense(params: {
+  id: string;
+  userId: string;
+  spentOn: Date;
+  category: ExpenseCategory;
+  amountMinor: number;
+  note?: string | null;
+}) {
+  return prisma.expense.updateMany({
+    where: {
+      id: params.id,
+      userId: params.userId,
+    },
+    data: {
       spentOn: params.spentOn,
       category: params.category,
       amountMinor: params.amountMinor,
@@ -64,10 +87,12 @@ export async function getWeeklyAllowance(params: {
     },
   });
 
-  if (current) return current;
+  if (current) {
+    return { ...current, isInherited: false };
+  }
 
   // Fallback: prefill from most recent earlier week
-  return prisma.weeklyAllowance.findFirst({
+  const previous = await prisma.weeklyAllowance.findFirst({
     where: {
       userId: params.userId,
       weekStart: {
@@ -76,6 +101,40 @@ export async function getWeeklyAllowance(params: {
     },
     orderBy: {
       weekStart: "desc",
+    },
+  });
+
+  if (previous) {
+    return {
+      ...previous,
+      id: "inherited",
+      weekStart: params.weekStart,
+      isInherited: true,
+    };
+  }
+
+  return null;
+}
+
+export async function upsertWeeklyAllowance(params: {
+  userId: string;
+  weekStart: Date;
+  amountMinor: number;
+}) {
+  return prisma.weeklyAllowance.upsert({
+    where: {
+      userId_weekStart: {
+        userId: params.userId,
+        weekStart: params.weekStart,
+      },
+    },
+    update: {
+      amountMinor: params.amountMinor,
+    },
+    create: {
+      userId: params.userId,
+      weekStart: params.weekStart,
+      amountMinor: params.amountMinor,
     },
   });
 }

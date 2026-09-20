@@ -55,3 +55,16 @@ This document tracks non-obvious technical and design choices across development
 ### [FE] Timezone-Agnostic String Date Math for Week Intervals
 - **Context:** Standard JavaScript `Date` objects shift calendar dates across timezones when using UTC conversions (e.g. converting `2026-09-21T00:00:00Z` in negative UTC offsets shifts to the previous day).
 - **Decision:** Implemented pure integer calendar arithmetic in `src/lib/date.ts` (`getMondayOfWeek`, `getSundayOfWeek`, `getWeekDates`, `addDays`, `addWeeks`). Calculations parse `YYYY-MM-DD` strings directly into year, month, and day integers, guaranteeing zero date shifts or boundary errors regardless of client timezone.
+
+### [FS] Integer Minor Units for Monetary Arithmetic
+- **Context:** Storing and calculating currency amounts with floating-point numbers (`Float` or raw decimals in JS) leads to catastrophic IEEE-754 precision issues (e.g., `0.1 + 0.2 = 0.30000000000000004`), resulting in rounding drift in weekly totals and subtotals.
+- **Decision:** Stored all amounts as integers in minor units (`amountMinor Int`, cents/centavos) in PostgreSQL and throughout all calculation pipelines (`calc-budget.ts`). Conversions to major units occur exclusively at user display formatting boundaries (`formatMoneyMinor`) and user input parsing (`parseMajorToMinor`).
+
+### [FS] Historical Weekly Allowance Fallback
+- **Context:** Allowance amounts are configured on a weekly basis (starting Monday). Requiring the user to manually set their allowance every Monday causes friction and breaks safe-to-spend analytics if skipped.
+- **Decision:** Implemented automated fallback in `getWeeklyAllowance`. If no record exists for a target Monday, the query fetches the most recently configured previous Monday (`weekStart < targetMonday, orderBy: { weekStart: 'desc' }`) and marks it `isInherited: true`. This maintains seamless continuity across weeks while allowing specific weeks to have custom overrides.
+
+### [FE] Multi-Modal Accessible Budget Health Indicators
+- **Context:** Visual budget health indicators (On Track, Near Limit, Over Budget) risk failing accessibility guidelines if conveyed purely by color changes.
+- **Decision:** Built budget health alerts with a three-layer cue system: distinct color badges (`color-mix` theme tokens), dedicated Lucide icons (`CheckCircle2`, `AlertCircle`, `AlertTriangle`), and unambiguous textual status descriptions specifying exact remaining or overage amounts.
+

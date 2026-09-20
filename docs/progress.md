@@ -10,8 +10,8 @@
 | **Phase 3** | Supabase Auth & Session | **DONE** | ✅ Register, verify email once, idempotent profile+settings upsert, login, unverified block, logout, route protection |
 | **Phase 4** | Settings | **DONE** | ✅ Lunch on/off & duration, currency settings persist, live preview, audited immutability guarantee |
 | **Phase 5** | DTR (Daily Time Record) | **DONE** | ✅ Pure calculators tested, entries CRUD, lunch snapshot immutability, week/month views |
-| **Phase 6** | Budget Tracker | NEXT | Allowance fallback, This Week & Monthly tabs, category chart |
-| **Phase 7** | Dashboard & Polish | PENDING | Weekly hours & budget summary, responsive & a11y passes |
+| **Phase 6** | Budget Tracker | **DONE** | ✅ Allowance fallback, minor unit precision, daily grouped spending, multi-state health alerts, Recharts category breakdown |
+| **Phase 7** | Dashboard & Polish | NEXT | Weekly hours & budget summary, responsive & a11y passes |
 
 ---
 
@@ -92,4 +92,23 @@
   - Added pure schema validation tests in `src/features/dtr/lib/dtr-validation.test.ts` and extended pure calculation tests in `src/features/dtr/lib/calc-hours.test.ts` (all 34 tests passing across the workspace).
   - All quality gates green: `typecheck`, `lint`, `test`, `build`.
 - **Next:** Phase 6 (Budget Tracker).
+- **Blockers:** None.
+
+## Phase 6 Log
+- **Done:**
+  - Implemented `getWeeklyAllowance` in `src/features/budget/services/budget-service.ts` with automatic historical fallback to earlier weeks, eliminating repetitive manual allowance configuration.
+  - Implemented `upsertWeeklyAllowance`, `createExpense`, `updateExpense`, and `deleteExpense` in `budget-service.ts` ensuring strictly integer minor units (`cents/centavos`) across all monetary storage and math.
+  - Implemented server actions in `src/features/budget/actions/budget-actions.ts` (`createExpenseAction`, `updateExpenseAction`, `deleteExpenseAction`, `setAllowanceAction`) with user authentication, Zod validation, and cache revalidation across `/budget` and `/dashboard`.
+  - Built interactive `ExpenseModal` component supporting amount formatting, category selection across the 7 core categories, date selection, and optional notes.
+  - Built interactive `AllowanceModal` component explaining historical inheritance and real-time formatting.
+  - Built `CategoryChart` component powered by Recharts (`ResponsiveContainer`, `BarChart`) with category color palettes and percentage distribution progress meters.
+  - Built comprehensive `BudgetView` component:
+    - Weekly allowance, total spent, and remaining KPI cards with dynamic safe-to-spend per day calculations.
+    - Accessible multi-state budget health progress meters (`On Track`, `Near Limit`, `Over Budget`) communicating status via text, icons, and progress meters.
+    - Daily grouped expense breakdown featuring day headers, per-day subtotals, category tags, amounts, and edit/delete actions.
+    - Monthly summary tab featuring total monthly spending, daily average, top expense category, and category distribution charts.
+  - Wired SSR data preloading in `src/app/(app)/budget/page.tsx`, loading the user's currency preference, weekly allowance, and range-scoped expenses.
+  - Added unit tests in `src/features/budget/lib/budget-validation.test.ts` and expanded `src/features/budget/lib/calc-budget.test.ts` (all 49 tests passing across the workspace).
+  - All quality gates green: `typecheck`, `lint`, `test`, `build`.
+- **Next:** Phase 7 (Dashboard & Polish).
 - **Blockers:** None.
