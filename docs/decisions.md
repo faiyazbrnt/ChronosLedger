@@ -125,6 +125,17 @@ This document tracks non-obvious technical and design choices across development
   2. Enhanced `ModuleNavLink` with an elevated active surface (`bg-white/[0.12]`, emerald icon tint) and muted slate-400 inactive links meeting WCAG AAA contrast ratios.
   3. Completely removed `border-b border-border` on the header and shifted its background to a seamless canvas blend (`bg-background/80 backdrop-blur-md`), allowing the theme toggle, notifications, and account dropdown to float cleanly over the page.
 
+### [FE] Collapsible Icon-Only Sidebar Rail with Edge Toggle and LocalStorage Persistence
+- **Context:** To maximize dashboard data visibility on desktop screens, users requested the ability to collapse the sidebar into an icon-only rail.
+- **Decision:**
+  1. Positioned an edge toggle button overlapping the right border (`absolute -right-3.5 top-1/2 -translate-y-1/2`), with `ChevronLeft` when expanded and `ChevronRight` when collapsed.
+  2. Implemented smooth CSS width transitions (`md:w-64` ⟷ `md:w-[72px]`) synchronized with content padding (`md:pl-64` ⟷ `md:pl-[72px]`).
+  3. Added `collapsed` mode to `ModuleNavLink` with centered icon dimensions (`h-11 w-11`), `sr-only` labels, and native browser tooltips (`title={label}`).
+  4. Added `hideTitle` prop to `Brand` to center the logo icon when minimized without empty child gap artifacts.
+  5. Preserved user preference across route transitions and refreshes using client-safe `localStorage` (`chronos_sidebar_collapsed`).
+
+
+
 
 
 

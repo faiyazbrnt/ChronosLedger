@@ -211,6 +211,16 @@
 - **Done:** Completely removed the harsh horizontal divider line (`border-b border-border`) beneath the top header, and transitioned header background to a seamless canvas blend (`bg-background/80 backdrop-blur-md`).
 - **Done:** Aligned mobile drawer with the deep dark slate styling and mobile header with the borderless canvas blend.
 - **Verification:** `bun run typecheck`, `bun run lint`, `bun test` (57 passing), and `bun run build` (all 18 routes compiled cleanly) all pass.
-- **Next:** User local visual check by running `bun run dev` and browsing `http://localhost:3000`.
+
+---
+
+## Collapsible Navigation Sidebar (Icon-Only Minimized State)
+- **Done:** Added an edge toggle button positioned on the right border of the sidebar (`absolute -right-3.5 top-1/2 -translate-y-1/2`) featuring `ChevronLeft` when expanded and `ChevronRight` when collapsed.
+- **Done:** Implemented minimized icon-only sidebar rail mode (`72px`), centering the logo icon and navigation icons with native hover tooltips and `sr-only` accessibility labels.
+- **Done:** Added smooth animated transitions for sidebar width (`md:w-64` ⟷ `md:w-[72px]`) and main content padding (`md:pl-64` ⟷ `md:pl-[72px]`).
+- **Done:** Implemented client-side persistence of collapsed state via `localStorage` key `chronos_sidebar_collapsed`.
+- **Done:** Added `hideTitle` prop to `Brand` component for cleanly centering the logo icon when collapsed.
+- **Verification:** `bun run typecheck`, `bun run lint`, and `bun test` (57 passing) all pass.
+
 
 
