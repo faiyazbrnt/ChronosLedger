@@ -11,7 +11,7 @@
 | **Phase 4** | Settings | **DONE** | ✅ Lunch on/off & duration, currency settings persist, live preview, audited immutability guarantee |
 | **Phase 5** | DTR (Daily Time Record) | **DONE** | ✅ Pure calculators tested, entries CRUD, lunch snapshot immutability, week/month views |
 | **Phase 6** | Budget Tracker | **DONE** | ✅ Allowance fallback, minor unit precision, daily grouped spending, multi-state health alerts, Recharts category breakdown |
-| **Phase 7** | Dashboard & Polish | NEXT | Weekly hours & budget summary, responsive & a11y passes |
+| **Phase 7** | Dashboard & Polish | **DONE** | ✅ Weekly hours & budget summary, responsive & a11y passes, skip-link, all gates green |
 
 ---
 
@@ -112,3 +112,22 @@
   - All quality gates green: `typecheck`, `lint`, `test`, `build`.
 - **Next:** Phase 7 (Dashboard & Polish).
 - **Blockers:** None.
+
+## Phase 7 Log
+- **Done:**
+  - Defined comprehensive `DashboardData` and sub-types in `src/features/dashboard/types/index.ts`.
+  - Implemented pure calculations in `src/features/dashboard/lib/calc-dashboard.ts` (`calculateWeeklyDtrSummary`, `calculateWeeklyBudgetSummary`) with unit tests in `calc-dashboard.test.ts` (all 57 unit tests green across 7 files).
+  - Built `getDashboardData` service layer in `src/features/dashboard/services/dashboard-service.ts` with parallel Prisma queries, user data isolation, and weekly allowance fallback.
+  - Built interactive `DashboardView` component:
+    - Weekly hours KPI with decimal conversion and 40h standard week progress bar.
+    - Remaining budget KPI with dynamic safe-to-spend per day rate, allowance spend bar, and inheritance status tag.
+    - Three-tier budget health status system (`On Track`, `Near Limit`, `Over Budget`) featuring prominent alert banners.
+    - Side-by-side recent activity feeds for recent work shifts (with clock times, net duration, and lunch deduction badge) and recent expenses (with category badges and formatted amounts).
+    - Polished empty states with direct "+ Log Shift" and "+ Add Expense" action triggers.
+  - Connected `src/app/(app)/dashboard/page.tsx` with dynamic SSR preloading for instant zero-layout-shift hydration.
+  - Added accessible keyboard skip-to-main-content link in `src/app/layout.tsx`.
+  - Verified responsive design (desktop sidebar + mobile bottom navigation bar + mobile header) across both themes.
+  - All quality gates green: `bun run typecheck`, `bun run lint`, `bun test`, `bun run build`.
+- **Next:** Project complete! All 8 phases (Phase 0 through Phase 7) fulfilled and verified.
+- **Blockers:** None.
+

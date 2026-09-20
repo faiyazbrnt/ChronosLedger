@@ -68,3 +68,12 @@ This document tracks non-obvious technical and design choices across development
 - **Context:** Visual budget health indicators (On Track, Near Limit, Over Budget) risk failing accessibility guidelines if conveyed purely by color changes.
 - **Decision:** Built budget health alerts with a three-layer cue system: distinct color badges (`color-mix` theme tokens), dedicated Lucide icons (`CheckCircle2`, `AlertCircle`, `AlertTriangle`), and unambiguous textual status descriptions specifying exact remaining or overage amounts.
 
+### [FS] Unified Mission-Control Aggregation without Cross-Feature Import Violations
+- **Context:** The Dashboard aggregates data from `Profile`, `Settings`, `DtrEntry`, `WeeklyAllowance`, and `Expense`. Directly importing between `@/features/dtr`, `@/features/budget`, and `@/features/dashboard` is strictly blocked by ESLint boundary rules.
+- **Decision:** Encapsulated unified aggregation inside `src/features/dashboard/services/dashboard-service.ts`. Because service layers are granted authorized access to `prisma`, it performs optimized parallel queries across models, computes pure derived metrics via `calc-dashboard.ts`, and serializes a unified typed `DashboardData` payload directly for SSR page consumption.
+
+### [FE] Responsive Multi-Tier KPI Dashboard Architecture & Skip-Link Navigation
+- **Context:** Mobile users need quick at-a-glance shift and expense shortcuts without screen clutter, while desktop users benefit from expansive side-by-side activity feeds. In addition, keyboard navigation requires rapid skipping past navigation menus.
+- **Decision:** Designed `DashboardView` with a multi-tier structure: responsive KPI cards with dynamic progress bars, actionable health alert banners, side-by-side recent activity feeds with empty states and deep links, and integrated an accessible skip-to-main-content link in `RootLayout`.
+
+
