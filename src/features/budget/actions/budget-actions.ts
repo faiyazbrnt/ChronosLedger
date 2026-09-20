@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { parseISODate, formatDateToISO } from "@/lib/date";
+import { recordActivity } from "@/lib/activity";
+import { ensureProfileAndSettings } from "@/lib/profile-bootstrap";
+import { getSafeServerActionError } from "@/lib/server-action-error";
 import {
   expenseSchema,
   updateExpenseSchema,
@@ -42,7 +45,7 @@ export async function createExpenseAction(
     error: authError,
   } = await supabase.auth.getUser();
 
-  if (authError || !user) {
+  if (authError || !user || !user.email) {
     return {
       ok: false,
       error: "You must be signed in to log an expense.",
@@ -50,6 +53,7 @@ export async function createExpenseAction(
   }
 
   try {
+    await ensureProfileAndSettings({ userId: user.id, email: user.email ?? "" });
     const spentOn = parseISODate(result.data.spentOn);
     const created = await createExpense({
       userId: user.id,
@@ -58,6 +62,7 @@ export async function createExpenseAction(
       amountMinor: result.data.amountMinor,
       note: result.data.note?.trim() || null,
     });
+    await recordActivity(user.id, `Expense added: ${result.data.category}`, "expense");
 
     revalidatePath("/budget");
     revalidatePath("/dashboard");
@@ -80,7 +85,7 @@ export async function createExpenseAction(
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Failed to record expense.",
+      error: getSafeServerActionError(error, "record expense", "We couldn't record the expense. Please try again."),
     };
   }
 }
@@ -120,6 +125,7 @@ export async function updateExpenseAction(
       amountMinor: result.data.amountMinor,
       note: result.data.note?.trim() || null,
     });
+    await recordActivity(user.id, "Expense updated", "expense");
 
     revalidatePath("/budget");
     revalidatePath("/dashboard");
@@ -128,7 +134,7 @@ export async function updateExpenseAction(
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Failed to update expense.",
+      error: getSafeServerActionError(error, "update expense", "We couldn't update the expense. Please try again."),
     };
   }
 }
@@ -163,6 +169,7 @@ export async function deleteExpenseAction(
       id: result.data.id,
       userId: user.id,
     });
+    await recordActivity(user.id, "Expense deleted", "expense");
 
     revalidatePath("/budget");
     revalidatePath("/dashboard");
@@ -171,7 +178,7 @@ export async function deleteExpenseAction(
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Failed to delete expense.",
+      error: getSafeServerActionError(error, "delete expense", "We couldn't delete the expense. Please try again."),
     };
   }
 }
@@ -194,7 +201,7 @@ export async function setAllowanceAction(
     error: authError,
   } = await supabase.auth.getUser();
 
-  if (authError || !user) {
+  if (authError || !user || !user.email) {
     return {
       ok: false,
       error: "You must be signed in to configure your allowance.",
@@ -202,6 +209,7 @@ export async function setAllowanceAction(
   }
 
   try {
+    await ensureProfileAndSettings({ userId: user.id, email: user.email ?? "" });
     const weekStart = parseISODate(result.data.weekStart);
     const updated = await upsertWeeklyAllowance({
       userId: user.id,
@@ -227,8 +235,7 @@ export async function setAllowanceAction(
   } catch (error) {
     return {
       ok: false,
-      error:
-        error instanceof Error ? error.message : "Failed to save allowance.",
+      error: getSafeServerActionError(error, "save allowance", "We couldn't save the allowance. Please try again."),
     };
   }
 }

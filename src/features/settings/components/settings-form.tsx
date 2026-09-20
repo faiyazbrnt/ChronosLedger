@@ -109,7 +109,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     <form onSubmit={handleSave} className="space-y-8 animate-in fade-in duration-300 max-w-3xl">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-baseline gap-2">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
             Settings
           </h1>

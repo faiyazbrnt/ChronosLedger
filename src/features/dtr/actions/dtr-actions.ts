@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { parseISODate, formatDateToISO } from "@/lib/date";
+import { recordActivity } from "@/lib/activity";
+import { ensureProfileAndSettings } from "@/lib/profile-bootstrap";
+import { getSafeServerActionError } from "@/lib/server-action-error";
 import {
   dtrEntrySchema,
   deleteDtrEntrySchema,
@@ -32,7 +35,7 @@ export async function saveDtrEntryAction(
     error: authError,
   } = await supabase.auth.getUser();
 
-  if (authError || !user) {
+  if (authError || !user || !user.email) {
     return {
       ok: false,
       error: "You must be signed in to record daily hours.",
@@ -40,15 +43,22 @@ export async function saveDtrEntryAction(
   }
 
   try {
+    await ensureProfileAndSettings({ userId: user.id, email: user.email ?? "" });
     const workDate = parseISODate(result.data.workDate);
 
-    const saved = await saveDtrEntryWithSnapshot({
+    const { entry: saved, wasCreated } = await saveDtrEntryWithSnapshot({
       userId: user.id,
       workDate,
       timeInMinutes: result.data.timeInMinutes,
       timeOutMinutes: result.data.timeOutMinutes,
       note: result.data.note?.trim() || null,
     });
+
+    await recordActivity(
+      user.id,
+      `${wasCreated ? "Shift logged" : "Shift updated"}: ${result.data.workDate}`,
+      "shift"
+    );
 
     revalidatePath("/dtr");
     revalidatePath("/dashboard");
@@ -72,7 +82,7 @@ export async function saveDtrEntryAction(
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Failed to save DTR entry.",
+      error: getSafeServerActionError(error, "save DTR entry", "We couldn't save the shift. Please try again."),
     };
   }
 }
@@ -107,6 +117,7 @@ export async function deleteDtrEntryAction(
       id: result.data.id,
       userId: user.id,
     });
+    await recordActivity(user.id, "Shift deleted", "shift");
 
     revalidatePath("/dtr");
     revalidatePath("/dashboard");
@@ -115,8 +126,7 @@ export async function deleteDtrEntryAction(
   } catch (error) {
     return {
       ok: false,
-      error:
-        error instanceof Error ? error.message : "Failed to delete DTR entry.",
+      error: getSafeServerActionError(error, "delete DTR entry", "We couldn't delete the shift. Please try again."),
     };
   }
 }

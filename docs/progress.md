@@ -193,3 +193,22 @@
 - **Done:** Migrated hard-coded light success and near-limit alert utility colors to semantic `success` and `warning` tokens.
 - **Blockers:** `bun run db:generate` is blocked by a Windows lock on Prisma's generated query-engine DLL; rerun after the process holding `node_modules/.prisma/client/query_engine-windows.dll.node` exits.
 
+---
+
+---
+
+## Auth Profile Bootstrap, Signup Errors & Shell Alignment
+- **Done:** Added idempotent profile/settings initialization after confirmation, on confirmed login, and before user-owned create or upsert actions to prevent missing-parent FK failures.
+- **Done:** Added a non-executed `scripts/backfill-profiles.ts` utility for missing profiles, friendly rate-limit and persistence errors, and server-side error logging.
+- **Done:** Removed the desktop sidebar divider and aligned the sidebar brand and desktop header borders at a shared 65 px height.
+
+---
+
+## Phase 2: Notifications, Password Recovery & Calendar Module
+- **Done:** Added a persisted, user-scoped notification model, SQL migration with RLS owner policies, server actions, and a header bell dialog with unread count, All/Unread filter, mark-read controls, and ConfirmDialog-protected clear-all.
+- **Done:** Logged DTR and expense mutations as notification activities without changing their business data contracts.
+- **Done:** Added Supabase-native password recovery request/reset routes, shared PasswordInput integration, generic anti-enumeration response, and sign-in success state.
+- **Done:** Replaced the Calendar placeholder with the requested left-navigation calendar module, Monday-first layout, token-only state colors, split shift/holiday fills, accessible state labels, and DTR data reuse.
+- **Verification:** `bun run typecheck`, `bun run lint`, `bun test` (57 passing), `bun run db:generate`, and `bun run build` all pass.
+- **Next:** Apply `prisma/migrations/2_notifications/migration.sql` through Supabase SQL Editor before relying on notification persistence. Perform authenticated browser checks for the remaining interaction cases.
+

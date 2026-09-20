@@ -4,13 +4,19 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
+  forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resendVerificationSchema,
+  resetPasswordSchema,
+  type ForgotPasswordInput,
   type LoginInput,
   type RegisterInput,
   type ResendVerificationInput,
+  type ResetPasswordInput,
 } from "../schemas";
+import { recordActivity } from "@/lib/activity";
+import { ensureProfileAndSettings } from "@/lib/profile-bootstrap";
 import type { AuthActionResponse } from "../types";
 
 async function getOrigin(): Promise<string> {
@@ -84,6 +90,17 @@ export async function loginAction(
     };
   }
 
+  if (!data.user?.email) {
+    return { ok: false, error: "We couldn't verify your account email. Please try again." };
+  }
+
+  try {
+    await ensureProfileAndSettings({ userId: data.user.id, email: data.user.email });
+  } catch (error) {
+    console.error("Account initialization after login failed.", error);
+    return { ok: false, error: "We couldn't prepare your account. Please try again." };
+  }
+
   return { ok: true };
 }
 
@@ -111,9 +128,12 @@ export async function registerAction(
   });
 
   if (error) {
+    console.error("Supabase signup failed.", error);
     return {
       ok: false,
-      error: error.message,
+      error: error.message.toLowerCase().includes("email rate limit")
+        ? "Too many account attempts were made. Please wait a few minutes before trying again."
+        : "We couldn't create your account. Please try again.",
     };
   }
 
@@ -157,12 +177,57 @@ export async function resendVerificationAction(
   });
 
   if (error) {
+    console.error("Supabase verification resend failed.", error);
     return {
       ok: false,
-      error: error.message,
+      error: error.message.toLowerCase().includes("email rate limit")
+        ? "Too many verification emails were requested. Please wait a few minutes before trying again."
+        : "We couldn't send a verification email. Please try again.",
     };
   }
 
+  return { ok: true };
+}
+
+export async function requestPasswordResetAction(
+  rawInput: ForgotPasswordInput
+): Promise<AuthActionResponse> {
+  const result = forgotPasswordSchema.safeParse(rawInput);
+  // Keep this response generic whether validation fails or the user is unknown.
+  if (!result.success) return { ok: true };
+
+  const supabase = await createClient();
+  const origin = await getOrigin();
+  await supabase.auth.resetPasswordForEmail(result.data.email, {
+    redirectTo: `${origin}/auth/confirm?next=/reset-password`,
+  });
+  return { ok: true };
+}
+
+export async function resetPasswordAction(
+  rawInput: ResetPasswordInput
+): Promise<AuthActionResponse> {
+  const result = resetPasswordSchema.safeParse(rawInput);
+  if (!result.success) {
+    return {
+      ok: false,
+      error: "Please correct the password fields.",
+      fieldErrors: result.error.flatten().fieldErrors,
+    };
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "This reset link is invalid or has expired. Request a new one." };
+
+  const { error } = await supabase.auth.updateUser({ password: result.data.password });
+  if (error) return { ok: false, error: "This reset link is invalid or has expired. Request a new one." };
+
+  if (user.email) {
+    await ensureProfileAndSettings({ userId: user.id, email: user.email });
+  }
+  await recordActivity(user.id, "Password changed", "security");
+  await supabase.auth.signOut();
   return { ok: true };
 }
 

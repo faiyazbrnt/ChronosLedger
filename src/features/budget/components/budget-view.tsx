@@ -49,6 +49,8 @@ import {
 } from "../lib/calc-budget";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/components/ui";
+import { useNotify } from "@/components/ui";
 import { deleteExpenseAction } from "../actions/budget-actions";
 import { ExpenseModal } from "./expense-modal";
 import { AllowanceModal } from "./allowance-modal";
@@ -93,6 +95,8 @@ export function BudgetView({
   currency = "PHP",
   initialWeekMonday,
 }: BudgetViewProps) {
+  const confirm = useConfirm();
+  const notify = useNotify();
   const todayStr = getTodayDateString();
   const currentWeekMonday = getMondayOfWeek(todayStr);
 
@@ -205,14 +209,16 @@ export function BudgetView({
       const filtered = prev.filter((e) => e.id !== saved.id);
       return [saved, ...filtered];
     });
+    notify.success("Expense saved");
   };
 
   const handleAllowanceSaved = (updated: WeeklyAllowanceData) => {
     setAllowance(updated);
   };
 
-  const handleDeleteExpense = (id: string) => {
-    if (!confirm("Are you sure you want to delete this expense?")) return;
+  const handleDeleteExpense = async (id: string) => {
+    const expense = expenses.find((item) => item.id === id);
+    if (!expense || !(await confirm({ title: "Delete expense?", description: `Delete this ${expense.category.toLowerCase()} expense? This cannot be undone.`, confirmLabel: "Delete expense", variant: "destructive" }))) return;
     setActionError(null);
     setDeletingId(id);
 
@@ -221,9 +227,11 @@ export function BudgetView({
       setDeletingId(null);
       if (!res.ok) {
         setActionError(res.error);
+        notify.error("Couldn't delete the expense. Please try again.");
         return;
       }
       setExpenses((prev) => prev.filter((e) => e.id !== id));
+      notify.success("Expense deleted");
     });
   };
 
@@ -232,7 +240,7 @@ export function BudgetView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-baseline gap-2">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               Budget Tracker
             </h1>

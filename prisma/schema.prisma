@@ -30,8 +30,23 @@ model Profile {
   dtrEntries DtrEntry[]
   expenses   Expense[]
   allowances WeeklyAllowance[]
+  notifications Notification[]
 
   @@map("profiles")
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("notifications")
 }
 
 model Settings {
