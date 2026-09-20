@@ -27,9 +27,9 @@ const CATEGORY_STYLES: Record<
 > = {
   FOOD: {
     label: "Food & Dining",
-    bg: "bg-amber-500/10 dark:bg-amber-500/20",
-    text: "text-amber-800 dark:text-amber-300",
-    border: "border-amber-500/30",
+    bg: "bg-warning/10",
+    text: "text-warning",
+    border: "border-warning/30",
   },
   TRANSPORT: {
     label: "Transportation",
@@ -51,9 +51,9 @@ const CATEGORY_STYLES: Record<
   },
   HEALTH: {
     label: "Health",
-    bg: "bg-emerald-500/10 dark:bg-emerald-500/20",
-    text: "text-emerald-800 dark:text-emerald-300",
-    border: "border-emerald-500/30",
+    bg: "bg-success/10",
+    text: "text-success",
+    border: "border-success/30",
   },
   ENTERTAINMENT: {
     label: "Entertainment",
@@ -152,10 +152,10 @@ export function DashboardView({ data }: DashboardViewProps) {
         <div
           role="alert"
           aria-live="polite"
-          className="flex items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 dark:border-amber-500/50 dark:bg-amber-500/15"
+          className="flex items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-warning/40 bg-warning/10 text-warning"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300">
+            <div className="p-2 rounded-lg bg-warning/20 text-warning">
               <AlertCircle className="h-5 w-5" />
             </div>
             <div>
@@ -170,7 +170,7 @@ export function DashboardView({ data }: DashboardViewProps) {
             </div>
           </div>
           <Link href="/budget">
-            <Button variant="outline" size="sm" className="shrink-0 border-amber-500/40 hover:bg-amber-500/20 text-amber-900 dark:text-amber-200">
+            <Button variant="outline" size="sm" className="shrink-0 border-warning/40 hover:bg-warning/20 text-warning">
               View Budget
             </Button>
           </Link>
@@ -218,7 +218,7 @@ export function DashboardView({ data }: DashboardViewProps) {
                 <Calendar className="h-3.5 w-3.5" />
                 {weeklyDtr.daysWorked} of 7 days logged
               </span>
-              <Link href="/dtr" className="text-primary font-semibold hover:underline flex items-center gap-0.5">
+              <Link href="/dtr" className="text-link font-semibold hover:underline flex items-center gap-0.5">
                 Timesheet <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -242,7 +242,7 @@ export function DashboardView({ data }: DashboardViewProps) {
                   isOverBudget
                     ? "text-destructive"
                     : isNearLimit
-                    ? "text-amber-600 dark:text-amber-400"
+                    ? "text-warning"
                     : "text-primary"
                 }`}
               >
@@ -270,7 +270,7 @@ export function DashboardView({ data }: DashboardViewProps) {
                     isOverBudget
                       ? "bg-destructive"
                       : isNearLimit
-                      ? "bg-amber-500"
+                      ? "bg-warning"
                       : "bg-primary"
                   }`}
                   style={{ width: `${Math.min(100, weeklyBudget.percentUsed)}%` }}
@@ -283,7 +283,7 @@ export function DashboardView({ data }: DashboardViewProps) {
                 <TrendingUp className="h-3.5 w-3.5 text-primary" />
                 Safe: {formatMinorUnits(weeklyBudget.safeToSpendPerDayMinor, currency)} / day
               </span>
-              <Link href="/budget" className="text-primary font-semibold hover:underline flex items-center gap-0.5">
+              <Link href="/budget" className="text-link font-semibold hover:underline flex items-center gap-0.5">
                 Budget <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -313,13 +313,13 @@ export function DashboardView({ data }: DashboardViewProps) {
                     </>
                   ) : isNearLimit ? (
                     <>
-                      <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Near Limit</span>
+                      <AlertCircle className="h-3.5 w-3.5 text-warning" />
+                      <span className="text-xs font-bold text-warning">Near Limit</span>
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">On Track</span>
+                      <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                      <span className="text-xs font-bold text-success">On Track</span>
                     </>
                   )}
                 </div>
@@ -346,7 +346,7 @@ export function DashboardView({ data }: DashboardViewProps) {
             </div>
 
             <div className="pt-1 flex items-center justify-end text-xs text-muted-foreground border-t border-border/50">
-              <Link href="/settings" className="text-primary font-semibold hover:underline flex items-center gap-0.5">
+              <Link href="/settings" className="text-link font-semibold hover:underline flex items-center gap-0.5">
                 Preferences <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -366,7 +366,7 @@ export function DashboardView({ data }: DashboardViewProps) {
                   Latest shifts recorded with snapshot lunch deductions
                 </CardDescription>
               </div>
-              <Link href="/dtr" className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5">
+              <Link href="/dtr" className="text-xs font-semibold text-link hover:underline flex items-center gap-0.5">
                 View all <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -435,7 +435,7 @@ export function DashboardView({ data }: DashboardViewProps) {
                   Latest tracked spending across your weekly budget
                 </CardDescription>
               </div>
-              <Link href="/budget" className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5">
+              <Link href="/budget" className="text-xs font-semibold text-link hover:underline flex items-center gap-0.5">
                 View all <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>

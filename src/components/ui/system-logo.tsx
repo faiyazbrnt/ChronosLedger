@@ -96,7 +96,7 @@ export function Brand({
       >
         <span
           className={cn(
-            "font-bold text-lg tracking-tight text-foreground group-hover:text-primary transition-colors leading-none truncate",
+            "font-bold text-lg tracking-tight text-foreground group-hover:text-link transition-colors leading-none truncate",
             titleClassName
           )}
         >

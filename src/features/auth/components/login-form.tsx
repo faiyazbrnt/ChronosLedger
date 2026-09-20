@@ -131,7 +131,7 @@ export function LoginForm() {
         <div
           role="status"
           aria-live="polite"
-          className="p-3 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+          className="p-3 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 bg-success/10 text-success border border-success/20"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>{resendSuccess}</span>
@@ -236,7 +236,7 @@ export function LoginForm() {
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="font-semibold text-primary underline underline-offset-4 hover:opacity-80 transition-opacity"
+          className="font-semibold text-link underline underline-offset-4 hover:opacity-80 transition-opacity"
         >
           Create account
         </Link>

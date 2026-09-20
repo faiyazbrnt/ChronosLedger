@@ -177,3 +177,19 @@
 - **Verification:** `bun run typecheck`, `bun run lint`, `bun test` (57 passing), `bun run db:generate`, and `bun run build` all pass.
 - **Blockers:** Authenticated browser interaction and network throttling require a test account/browser automation, neither of which is available in this environment.
 
+---
+
+## Mint Palette, Budget Pie Chart & Mobile Drawer
+- **Done:** Replaced light-mode beige and maroon design tokens with mint surfaces, orange CTA tokens with dark foreground text, and blue link/navigation tokens. Dark-mode token values remain unchanged.
+- **Done:** Replaced the Budget Monthly Recharts bar chart with a responsive donut-style pie chart, category legend, amount-and-percentage tooltip, and existing empty state.
+- **Done:** Replaced the mobile bottom navigation with an accessible left drawer that supports backdrop, Escape, route-change, and desktop-breakpoint close paths, focus trapping, focus return, body-scroll locking, and reduced motion.
+- **Next:** Run a manual authenticated visual check at 375 px, 768 px, and 1280 px when a browser test session is available.
+- **Blockers:** None for automated verification.
+
+---
+
+## Slate, Teal & Orange Light Palette
+- **Done:** Updated light-mode canvas, surface, primary text/border, active, success, and alert design tokens to the supplied slate, teal, and orange palette. Existing dark-mode values are preserved.
+- **Done:** Migrated hard-coded light success and near-limit alert utility colors to semantic `success` and `warning` tokens.
+- **Blockers:** `bun run db:generate` is blocked by a Windows lock on Prisma's generated query-engine DLL; rerun after the process holding `node_modules/.prisma/client/query_engine-windows.dll.node` exits.
+

@@ -86,6 +86,18 @@ This document tracks non-obvious technical and design choices across development
 - **Context:** The route-level loading boundary communicates a slow destination render, but it cannot indicate which module link initiated navigation. The remaining allowance fallback queries also needlessly waited for the exact-week lookup before beginning their independent historical lookup.
 - **Decision:** Used Next 15.5.25's supported `useLinkStatus` API inside one reusable AppShell module-link component. It shows a `Loader2` indicator only after 150 ms, so cached navigations do not flicker; it includes `role="status"`, `aria-live="polite"`, `aria-busy`, a visually hidden loading label, and `motion-reduce:animate-none`. Top-level module links opt into full App Router prefetching. Exact-week and historical allowance reads now run in `Promise.all`, retaining the exact-week-first result semantics while removing the avoidable waterfall.
 
+### [FE] Mint, Orange, and Blue Light-Mode Semantic Tokens
+- **Context:** The original light palette used beige and maroon semantics that no longer match the product direction. Orange is unsuitable for white button text at WCAG AA contrast.
+- **Decision:** Set the light background and surfaces to mint (`#CBF3F0`), CTAs to orange (`#FF9F1C`) with a dark navy foreground (`#012A4A`), and links/active navigation to blue (`#0353A4`). Derived surface, border, muted, link, navigation, and chart category colors live in `globals.css`; dark-mode tokens are unchanged.
+
+### [FE] Responsive Recharts Pie Chart and Mobile Navigation Drawer
+- **Context:** Monthly category spending is proportion-based data, which is clearer as a pie chart. The mobile bottom bar consumed persistent vertical space.
+- **Decision:** Reused Recharts to render a responsive donut-style pie chart with CSS-token-driven category colors, legend, tooltip, and existing empty state. Replaced only the mobile bottom navigation with an AppShell drawer, using the existing `md` breakpoint and native focus/scroll management to avoid a new dialog dependency.
+
+### [FE] Slate, Teal, and Orange Light-Mode Semantics
+- **Context:** The supplied palette assigns distinct roles to neutral application layers, active time metrics, successful growth, and temporal alerts.
+- **Decision:** Mapped canvas to `#F4F6F8`, cards and popovers to `#FFFFFF`, primary text and borders to `#263238`, active navigation and metrics to `#37474F`, success to `#00BFA5`, and alerts to `#FF5722`. Added Tailwind v4 semantic success and warning color tokens, preserving the existing dark-mode values.
+
 ### [FE] Lighthouse & Core Web Vitals Optimization Pipeline
 - **Context:** Achieving an 80+ to 90+ Lighthouse Performance score required addressing critical rendering path bottlenecks, total blocking time (TBT), and asset weight across routes.
 - **Decision:**

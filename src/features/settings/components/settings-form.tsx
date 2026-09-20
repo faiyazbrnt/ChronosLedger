@@ -127,7 +127,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         <div
           role="status"
           aria-live="polite"
-          className="p-3.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+          className="p-3.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2.5 bg-success/10 text-success border border-success/20"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>{successMessage}</span>
