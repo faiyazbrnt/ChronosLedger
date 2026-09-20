@@ -74,6 +74,7 @@ export interface BrandProps {
   href?: string;
   className?: string;
   titleClassName?: string;
+  hideTitle?: boolean;
   priority?: boolean;
 }
 
@@ -83,31 +84,34 @@ export function Brand({
   href,
   className,
   titleClassName,
+  hideTitle = false,
   priority = true,
 }: BrandProps) {
   const content = (
-    <div className={cn("flex items-center gap-3 group select-none", className)}>
+    <div className={cn("flex items-center group select-none", !hideTitle && "gap-3", className)}>
       <SystemLogo size={size} priority={priority} />
-      <div
-        className={cn(
-          "min-w-0 flex",
-          subtitle ? "flex-col justify-center" : "items-center"
-        )}
-      >
-        <span
+      {!hideTitle && (
+        <div
           className={cn(
-            "font-bold text-lg tracking-tight text-foreground group-hover:text-link transition-colors leading-normal pb-px overflow-visible",
-            titleClassName
+            "min-w-0 flex",
+            subtitle ? "flex-col justify-center" : "items-center"
           )}
         >
-          ChronosLedger
-        </span>
-        {subtitle && (
-          <span className="text-xs text-muted-foreground font-medium block leading-tight mt-1 truncate">
-            {subtitle}
+          <span
+            className={cn(
+              "font-bold text-lg tracking-tight text-foreground group-hover:text-link transition-colors leading-normal pb-px overflow-visible",
+              titleClassName
+            )}
+          >
+            ChronosLedger
           </span>
-        )}
-      </div>
+          {subtitle && (
+            <span className="text-xs text-muted-foreground font-medium block leading-tight mt-1 truncate">
+              {subtitle}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 

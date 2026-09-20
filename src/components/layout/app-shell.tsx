@@ -10,6 +10,8 @@ import {
   Menu,
   X,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { ModuleNavLink } from "./module-nav-link";
@@ -52,8 +54,32 @@ const navItems = [
 export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("chronos_sidebar_collapsed");
+      if (stored !== null) {
+        setIsCollapsed(stored === "true");
+      }
+    } catch {
+      // Ignore localStorage read errors (e.g., SSR or sandbox)
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("chronos_sidebar_collapsed", String(next));
+      } catch {
+        // Ignore localStorage write errors
+      }
+      return next;
+    });
+  };
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -120,20 +146,48 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
     <div className="min-h-screen flex bg-background text-foreground">
       {/* Desktop Sidebar Navigation (Hidden on mobile) */}
       <aside
-        className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-50 bg-card/60 backdrop-blur-md"
+        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 z-50 bg-[#131b21] dark:bg-[#090d11] text-slate-100 border-r border-slate-800/40 dark:border-white/10 shadow-sm transition-[width] duration-300 ease-in-out ${
+          isCollapsed ? "md:w-[72px]" : "md:w-64"
+        }`}
         aria-label="Desktop Navigation"
       >
-        <div className="flex flex-col flex-grow pb-4 overflow-y-auto">
+        {/* Toggle Collapse Button on the right border */}
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="hidden md:flex absolute -right-3.5 top-1/2 -translate-y-1/2 z-50 h-7 w-7 items-center justify-center rounded-full border border-slate-700/80 bg-[#131b21] text-slate-300 hover:text-white hover:bg-slate-800 hover:border-emerald-500/50 shadow-md transition-all duration-200 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          )}
+        </button>
+
+        <div className="flex flex-col flex-grow pb-4 overflow-y-auto overflow-x-hidden">
           {/* Brand Header */}
-          <div className="h-[65px] shrink-0 px-6 border-b border-border flex items-center">
+          <div
+            className={`h-[65px] shrink-0 border-b border-white/10 flex items-center transition-[padding] duration-300 ${
+              isCollapsed ? "justify-center px-0" : "px-6"
+            }`}
+          >
             <Brand
               size="lg"
               href="/dashboard"
+              hideTitle={isCollapsed}
+              titleClassName="text-white group-hover:text-emerald-300 transition-colors"
             />
           </div>
 
           {/* Navigation Links */}
-          <nav className="mt-6 flex-1 px-4 space-y-1.5" aria-label="Main Menu">
+          <nav
+            className={`mt-6 flex-1 space-y-1.5 transition-[padding] duration-300 ${
+              isCollapsed ? "px-2" : "px-4"
+            }`}
+            aria-label="Main Menu"
+          >
             {navItems.map((item) => {
               const isActive =
                 pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -144,17 +198,21 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
                   label={item.name}
                   icon={item.icon}
                   isActive={isActive}
+                  collapsed={isCollapsed}
                 />
               );
             })}
           </nav>
-
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col md:pl-64 min-w-0">
-        <header className="sticky top-0 z-30 hidden h-[65px] items-center justify-end border-b border-border bg-card/85 px-4 backdrop-blur-md md:flex">
+      <div
+        className={`flex-1 flex flex-col min-w-0 transition-[padding-left] duration-300 ease-in-out ${
+          isCollapsed ? "md:pl-[72px]" : "md:pl-64"
+        }`}
+      >
+        <header className="sticky top-0 z-30 hidden h-[65px] items-center justify-end bg-background/80 px-4 sm:px-6 md:px-8 backdrop-blur-md md:flex">
           <div className="flex items-center gap-2">
             {headerActions}
             <ThemeToggle />
@@ -162,7 +220,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
           </div>
         </header>
         {/* Mobile Header (Hidden on Desktop) */}
-        <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card/85 backdrop-blur-md">
+        <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-md">
           <button
             ref={menuButtonRef}
             type="button"
@@ -196,13 +254,13 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
               role="dialog"
               aria-modal="true"
               aria-label="Mobile navigation"
-              className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-border bg-card p-4 shadow-2xl animate-in slide-in-from-left duration-200 motion-reduce:animate-none"
+              className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-slate-800/40 dark:border-white/10 bg-[#131b21] dark:bg-[#090d11] text-slate-100 p-4 shadow-2xl animate-in slide-in-from-left duration-200 motion-reduce:animate-none"
             >
-              <div className="flex items-center justify-between border-b border-border pb-4">
-                <Brand size="sm" href="/dashboard" />
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <Brand size="sm" href="/dashboard" titleClassName="text-white group-hover:text-emerald-300 transition-colors" />
                 <button
                   type="button"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Close navigation menu"
                   onClick={closeMobileMenu}
                 >
@@ -226,13 +284,12 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
                   );
                 })}
               </nav>
-              <div className="mt-auto border-t border-border pt-4">
+              <div className="mt-auto border-t border-white/10 pt-4">
                 <ThemeToggle />
               </div>
             </div>
           </div>
         )}
-
         {/* Page Main Content */}
         <main
           id="main-content"

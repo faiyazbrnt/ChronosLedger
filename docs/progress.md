@@ -204,11 +204,23 @@
 
 ---
 
-## Phase 2: Notifications, Password Recovery & Calendar Module
-- **Done:** Added a persisted, user-scoped notification model, SQL migration with RLS owner policies, server actions, and a header bell dialog with unread count, All/Unread filter, mark-read controls, and ConfirmDialog-protected clear-all.
-- **Done:** Logged DTR and expense mutations as notification activities without changing their business data contracts.
-- **Done:** Added Supabase-native password recovery request/reset routes, shared PasswordInput integration, generic anti-enumeration response, and sign-in success state.
-- **Done:** Replaced the Calendar placeholder with the requested left-navigation calendar module, Monday-first layout, token-only state colors, split shift/holiday fills, accessible state labels, and DTR data reuse.
-- **Verification:** `bun run typecheck`, `bun run lint`, `bun test` (57 passing), `bun run db:generate`, and `bun run build` all pass.
-- **Next:** Apply `prisma/migrations/2_notifications/migration.sql` through Supabase SQL Editor before relying on notification persistence. Perform authenticated browser checks for the remaining interaction cases.
+## Navigation Bar Distinction & Divider Removal
+- **Done:** Restyled the desktop navigation sidebar to a deep dark slate (`#131B21` in light mode, `#090D11` in dark mode) with a subtle edge boundary (`border-r border-slate-800/40 dark:border-white/10`).
+- **Done:** Updated sidebar brand typography with crisp white text (`text-white`) and emerald hover transition.
+- **Done:** Enhanced navigation links with slate-400 inactive state and elevated `bg-white/[0.12]` active state with emerald-tinted icon indicators (`[&_svg]:text-emerald-400`), meeting WCAG AAA contrast guidelines.
+- **Done:** Completely removed the harsh horizontal divider line (`border-b border-border`) beneath the top header, and transitioned header background to a seamless canvas blend (`bg-background/80 backdrop-blur-md`).
+- **Done:** Aligned mobile drawer with the deep dark slate styling and mobile header with the borderless canvas blend.
+- **Verification:** `bun run typecheck`, `bun run lint`, `bun test` (57 passing), and `bun run build` (all 18 routes compiled cleanly) all pass.
+
+---
+
+## Collapsible Navigation Sidebar (Icon-Only Minimized State)
+- **Done:** Added an edge toggle button positioned on the right border of the sidebar (`absolute -right-3.5 top-1/2 -translate-y-1/2`) featuring `ChevronLeft` when expanded and `ChevronRight` when collapsed.
+- **Done:** Implemented minimized icon-only sidebar rail mode (`72px`), centering the logo icon and navigation icons with native hover tooltips and `sr-only` accessibility labels.
+- **Done:** Added smooth animated transitions for sidebar width (`md:w-64` ⟷ `md:w-[72px]`) and main content padding (`md:pl-64` ⟷ `md:pl-[72px]`).
+- **Done:** Implemented client-side persistence of collapsed state via `localStorage` key `chronos_sidebar_collapsed`.
+- **Done:** Added `hideTitle` prop to `Brand` component for cleanly centering the logo icon when collapsed.
+- **Verification:** `bun run typecheck`, `bun run lint`, and `bun test` (57 passing) all pass.
+
+
 

@@ -10,6 +10,7 @@ interface ModuleNavLinkProps {
   icon: LucideIcon;
   isActive: boolean;
   compact?: boolean;
+  collapsed?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
@@ -30,8 +31,9 @@ function NavLinkContent({
   label,
   icon,
   compact,
+  collapsed,
   isActive,
-}: Pick<ModuleNavLinkProps, "label" | "icon" | "compact" | "isActive">) {
+}: Pick<ModuleNavLinkProps, "label" | "icon" | "compact" | "collapsed" | "isActive">) {
   const { pending } = useLinkStatus();
   const [showPending, setShowPending] = useState(false);
 
@@ -66,6 +68,20 @@ function NavLinkContent({
     );
   }
 
+  if (collapsed) {
+    return (
+      <span
+        role="status"
+        aria-live="polite"
+        aria-busy={showPending}
+        className="flex items-center justify-center"
+      >
+        <PendingIcon Icon={icon} showPending={showPending} />
+        <span className="sr-only">{showPending ? `Loading ${label}` : label}</span>
+      </span>
+    );
+  }
+
   return (
     <span
       role="status"
@@ -86,27 +102,34 @@ export function ModuleNavLink({
   icon,
   isActive,
   compact = false,
+  collapsed = false,
   onClick,
 }: ModuleNavLinkProps) {
-  const activeClasses = compact
-    ? "text-nav-active"
-    : "bg-nav-active text-nav-active-foreground shadow-sm";
-  const inactiveClasses = compact
-    ? "text-muted-foreground hover:text-foreground"
-    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground active:scale-[0.99]";
-  const className = compact
-    ? `flex flex-col items-center justify-center min-h-[48px] min-w-[56px] px-2 py-1 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-        isActive ? activeClasses : inactiveClasses
-      }`
-    : `group flex items-center gap-3.5 px-3.5 py-2.5 text-sm font-semibold rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-        isActive ? activeClasses : inactiveClasses
-      }`;
+  let className = "";
+  if (compact) {
+    className = `flex flex-col items-center justify-center min-h-[48px] min-w-[56px] px-2 py-1 rounded-xl text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+      isActive ? "text-emerald-400" : "text-slate-400 hover:text-white"
+    }`;
+  } else if (collapsed) {
+    className = `group flex items-center justify-center h-11 w-11 mx-auto rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+      isActive
+        ? "bg-white/[0.12] text-white font-semibold shadow-xs border border-white/15 [&_svg]:text-emerald-400"
+        : "text-slate-400 hover:text-white hover:bg-white/[0.07] active:scale-[0.95]"
+    }`;
+  } else {
+    className = `group flex items-center gap-3.5 px-3.5 py-2.5 text-sm font-medium rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+      isActive
+        ? "bg-white/[0.12] text-white font-semibold shadow-xs border border-white/15 backdrop-blur-xs [&_svg]:text-emerald-400"
+        : "text-slate-400 hover:text-white hover:bg-white/[0.07] active:scale-[0.99]"
+    }`;
+  }
 
   return (
     <Link
       href={href}
       prefetch
       onClick={onClick}
+      title={collapsed ? label : undefined}
       aria-current={isActive ? "page" : undefined}
       className={className}
     >
@@ -114,6 +137,7 @@ export function ModuleNavLink({
         label={label}
         icon={icon}
         compact={compact}
+        collapsed={collapsed}
         isActive={isActive}
       />
     </Link>
