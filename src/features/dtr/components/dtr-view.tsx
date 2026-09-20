@@ -22,6 +22,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui";
+import { useNotify } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
 import {
   getMondayOfWeek,
@@ -57,6 +59,8 @@ export function DtrView({
   initialSettings,
   initialWeekMonday,
 }: DtrViewProps) {
+  const confirm = useConfirm();
+  const notify = useNotify();
   const todayStr = getTodayDateString();
   const currentWeekMonday = getMondayOfWeek(todayStr);
 
@@ -134,10 +138,12 @@ export function DtrView({
       const filtered = prev.filter((e) => e.workDate !== saved.workDate);
       return [...filtered, saved].sort((a, b) => a.workDate.localeCompare(b.workDate));
     });
+    notify.success(`Shift logged: ${formatDateDisplay(saved.workDate)}`);
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm("Are you sure you want to delete this shift entry?")) return;
+  const handleDelete = async (id: string) => {
+    const entry = entries.find((item) => item.id === id);
+    if (!entry || !(await confirm({ title: "Delete shift?", description: `Delete the ${formatDateDisplay(entry.workDate)} shift (${formatMinutesToTimeString(entry.timeInMinutes)} – ${formatMinutesToTimeString(entry.timeOutMinutes)})? This cannot be undone.`, confirmLabel: "Delete shift", variant: "destructive" }))) return;
     setActionError(null);
     setDeletingId(id);
 
@@ -146,9 +152,11 @@ export function DtrView({
       setDeletingId(null);
       if (!res.ok) {
         setActionError(res.error);
+        notify.error("Couldn't delete the shift. Please try again.");
         return;
       }
       setEntries((prev) => prev.filter((e) => e.id !== id));
+      notify.success("Shift deleted");
     });
   };
 
@@ -157,7 +165,7 @@ export function DtrView({
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-baseline gap-2">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               Daily Time Record
             </h1>

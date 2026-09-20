@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { settingsSchema, type SettingsInput } from "../schemas";
 import { updateUserSettings } from "../services/settings-service";
+import { ensureProfileAndSettings } from "@/lib/profile-bootstrap";
+import { getSafeServerActionError } from "@/lib/server-action-error";
 import type { SettingsActionResponse, UserSettingsData } from "../types";
 
 export async function updateSettingsAction(
@@ -24,7 +26,7 @@ export async function updateSettingsAction(
     error: authError,
   } = await supabase.auth.getUser();
 
-  if (authError || !user) {
+  if (authError || !user || !user.email) {
     return {
       ok: false,
       error: "You must be signed in to save settings.",
@@ -32,6 +34,7 @@ export async function updateSettingsAction(
   }
 
   try {
+    await ensureProfileAndSettings({ userId: user.id, email: user.email ?? "" });
     const updated = await updateUserSettings({
       userId: user.id,
       lunchDeductionEnabled: result.data.lunchDeductionEnabled,
@@ -51,8 +54,7 @@ export async function updateSettingsAction(
   } catch (error) {
     return {
       ok: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update settings.",
+      error: getSafeServerActionError(error, "update settings", "We couldn't update your settings. Please try again."),
     };
   }
 }

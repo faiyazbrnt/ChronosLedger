@@ -5,16 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
-import { Button, Input } from "@/components/ui";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Button, Input, PasswordInput } from "@/components/ui";
 import { registerSchema, type RegisterInput } from "../schemas";
 import { registerAction } from "../actions/auth-actions";
 
 export function RegisterForm() {
   const router = useRouter();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -110,31 +108,15 @@ export function RegisterForm() {
           >
             Password
           </label>
-          <div className="relative">
-            <Input
+          <PasswordInput
               id="password"
-              type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               placeholder="At least 8 characters"
               disabled={isPending}
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? "password-error" : undefined}
-              className="pr-10"
               {...register("password")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y/1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </button>
-          </div>
+          />
           {errors.password && (
             <p
               id="password-error"
@@ -154,10 +136,8 @@ export function RegisterForm() {
           >
             Confirm password
           </label>
-          <div className="relative">
-            <Input
+          <PasswordInput
               id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
               autoComplete="new-password"
               placeholder="Re-enter your password"
               disabled={isPending}
@@ -165,26 +145,8 @@ export function RegisterForm() {
               aria-describedby={
                 errors.confirmPassword ? "confirmPassword-error" : undefined
               }
-              className="pr-10"
               {...register("confirmPassword")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword((prev) => !prev)}
-              aria-label={
-                showConfirmPassword
-                  ? "Hide confirm password"
-                  : "Show confirm password"
-              }
-              className="absolute right-3 top-1/2 -translate-y/1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-            >
-              {showConfirmPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </button>
-          </div>
+          />
           {errors.confirmPassword && (
             <p
               id="confirmPassword-error"

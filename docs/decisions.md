@@ -106,4 +106,16 @@ This document tracks non-obvious technical and design choices across development
   3. **Responsive Image Delivery**: Configured `SystemLogo` to serve dimension-optimized assets (`logo-32.png` / `logo-64.png`, 3.5kB–12kB) instead of the full master PNG (152kB), saving 140kB of blocking image data on the initial viewport.
   4. **Next.js Production Configuration**: Enabled Gzip/Brotli compression and stripped powered-by headers in `next.config.ts`.
 
+### [FS & FE] Supabase-Native Password Recovery and Owner-Scoped Activity
+- **Context:** Password-reset tokens and notification records are security-sensitive user data.
+- **Decision:** Reused Supabase Auth's native recovery and authenticated `updateUser` APIs rather than minting custom tokens. Notification rows are linked to `profiles`, enforced through per-user RLS policies, and every browser operation is additionally scoped by the authenticated user in server actions.
+
+### [FS] Idempotent Profile Bootstrap Before User-Owned Writes
+- **Context:** Confirmation-link requests can be skipped or interrupted after Supabase confirms an account, leaving a valid authenticated UUID without its required `profiles` parent row.
+- **Decision:** A shared server helper now initializes profile/settings after confirmation, on confirmed login, and before user-owned create/upsert actions. It is an atomic transaction keyed by the Supabase UUID, so retries are safe and dependent writes have their FK parent.
+
+### [FE] Calendar as a Module with Token-Based State Fills
+- **Context:** The product owner clarified Calendar is a left-navigation module, not a header modal.
+- **Decision:** Implemented Calendar under the app route and reused DTR service data. Cells are labelled with all states and use CSS-variable hard-stop gradients for overlapping shift/holiday states; fixed-date Philippine holidays cover 2026–2027, while proclamation-dependent dates remain intentionally unlisted pending official confirmation.
+
 

@@ -70,7 +70,7 @@ export async function saveDtrEntryWithSnapshot(params: {
   });
 
   if (existing) {
-    return prisma.dtrEntry.update({
+    const entry = await prisma.dtrEntry.update({
       where: { id: existing.id },
       data: {
         timeInMinutes: params.timeInMinutes,
@@ -78,6 +78,7 @@ export async function saveDtrEntryWithSnapshot(params: {
         note: params.note,
       },
     });
+    return { entry, wasCreated: false };
   }
 
   // Snapshot current settings for newly created entry
@@ -88,7 +89,7 @@ export async function saveDtrEntryWithSnapshot(params: {
   const lunchMinutesApplied =
     settings && settings.lunchDeductionEnabled ? settings.lunchBreakMinutes : 0;
 
-  return prisma.dtrEntry.create({
+  const entry = await prisma.dtrEntry.create({
     data: {
       userId: params.userId,
       workDate: params.workDate,
@@ -98,6 +99,7 @@ export async function saveDtrEntryWithSnapshot(params: {
       note: params.note,
     },
   });
+  return { entry, wasCreated: true };
 }
 
 export async function upsertDtrEntry(params: {

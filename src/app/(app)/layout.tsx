@@ -1,18 +1,19 @@
 import { AppShell } from "@/components/layout";
-import { LogoutButton } from "@/features/auth";
+import { ConfirmDialogProvider, ToastProvider } from "@/components/ui";
+import { AccountMenu } from "@/features/auth";
+import { NotificationsMenu } from "@/features/notifications";
+import { getAuthUser } from "@/lib/supabase/server";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const user = await getAuthUser();
   return (
-    <AppShell
+    <ToastProvider><ConfirmDialogProvider><AppShell
+      headerActions={<NotificationsMenu />}
       userSlot={
-        <LogoutButton
-          variant="outline"
-          size="sm"
-          className="w-full text-xs justify-center border-border/60 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-        />
+        <AccountMenu email={user?.email ?? "Account"} />
       }
     >
       {children}
-    </AppShell>
+    </AppShell></ConfirmDialogProvider></ToastProvider>
   );
 }

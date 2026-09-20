@@ -3,4 +3,7 @@ export * from "./card";
 export * from "./badge";
 export * from "./skeleton";
 export * from "./input";
+export * from "./password-input";
+export * from "./confirm-dialog";
+export * from "./toast";
 export * from "./system-logo";

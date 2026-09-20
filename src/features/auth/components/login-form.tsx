@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, Mail } from "lucide-react";
-import { Button, Input } from "@/components/ui";
+import { Loader2, AlertCircle, CheckCircle2, Mail } from "lucide-react";
+import { Button, Input, PasswordInput } from "@/components/ui";
 import { loginSchema, type LoginInput } from "../schemas";
 import { loginAction, resendVerificationAction } from "../actions/auth-actions";
 
@@ -15,12 +15,12 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
 
-  const [showPassword, setShowPassword] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(
     urlError === "verification_failed"
       ? "Email verification failed or link expired. Please sign in or request a new link."
       : null
   );
+  const resetComplete = searchParams.get("reset") === "success";
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -177,32 +177,19 @@ export function LoginForm() {
             >
               Password
             </label>
+            <Link href="/forgot-password" className="text-xs font-medium text-link hover:underline">
+              Forgot password?
+            </Link>
           </div>
-          <div className="relative">
-            <Input
+          <PasswordInput
               id="password"
-              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               placeholder="••••••••"
               disabled={isPending}
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? "password-error" : undefined}
-              className="pr-10"
               {...register("password")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y/1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </button>
-          </div>
+          />
           {errors.password && (
             <p
               id="password-error"
@@ -230,6 +217,8 @@ export function LoginForm() {
           )}
         </Button>
       </form>
+
+      {resetComplete && <p role="status" className="rounded-xl border border-success/20 bg-success/10 p-3 text-center text-xs font-medium text-success">Password changed. You can now sign in.</p>}
 
       {/* Footer Navigation */}
       <div className="text-center text-xs text-muted-foreground pt-2">

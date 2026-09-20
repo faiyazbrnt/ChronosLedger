@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { ensureProfileAndSettings } from "@/lib/profile-bootstrap";
 
 export async function findProfileById(userId: string) {
   return prisma.profile.findUnique({
@@ -11,31 +12,5 @@ export async function upsertProfileAndSettings(params: {
   userId: string;
   email: string;
 }) {
-  return prisma.$transaction(async (tx) => {
-    const profile = await tx.profile.upsert({
-      where: { id: params.userId },
-      update: {
-        email: params.email,
-        verifiedAt: new Date(),
-      },
-      create: {
-        id: params.userId,
-        email: params.email,
-        verifiedAt: new Date(),
-      },
-    });
-
-    await tx.settings.upsert({
-      where: { userId: params.userId },
-      update: {},
-      create: {
-        userId: params.userId,
-        lunchDeductionEnabled: true,
-        lunchBreakMinutes: 60,
-        currency: "PHP",
-      },
-    });
-
-    return profile;
-  });
+  return ensureProfileAndSettings(params);
 }

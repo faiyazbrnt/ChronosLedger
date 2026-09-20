@@ -6,21 +6,26 @@
 -- Each authenticated user is strictly isolated to their own records.
 -- ==============================================================================
 
--- 0. Ensure auth schema, roles, and auth.uid() exist for shadow database compatibility
+-- Supabase owns the auth schema, roles, and auth.uid() function. Do not create
+-- or replace them from SQL Editor. Remove only this application's policies so
+-- the remainder of this migration is safe to re-run.
 DO $$
+DECLARE
+  policy_record record;
 BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
-    CREATE ROLE authenticated;
-  END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
-    CREATE ROLE anon;
-  END IF;
-END $$;
-
-CREATE SCHEMA IF NOT EXISTS "auth";
-CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$
-  SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid;
-$$ LANGUAGE sql STABLE;
+  FOR policy_record IN
+    SELECT * FROM (VALUES
+      ('profiles', 'profiles_select_owner'), ('profiles', 'profiles_insert_owner'), ('profiles', 'profiles_update_owner'), ('profiles', 'profiles_delete_owner'),
+      ('settings', 'settings_select_owner'), ('settings', 'settings_insert_owner'), ('settings', 'settings_update_owner'), ('settings', 'settings_delete_owner'),
+      ('dtr_entries', 'dtr_entries_select_owner'), ('dtr_entries', 'dtr_entries_insert_owner'), ('dtr_entries', 'dtr_entries_update_owner'), ('dtr_entries', 'dtr_entries_delete_owner'),
+      ('expenses', 'expenses_select_owner'), ('expenses', 'expenses_insert_owner'), ('expenses', 'expenses_update_owner'), ('expenses', 'expenses_delete_owner'),
+      ('weekly_allowances', 'weekly_allowances_select_owner'), ('weekly_allowances', 'weekly_allowances_insert_owner'), ('weekly_allowances', 'weekly_allowances_update_owner'), ('weekly_allowances', 'weekly_allowances_delete_owner')
+    ) AS policies(table_name, policy_name)
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', policy_record.policy_name, policy_record.table_name);
+  END LOOP;
+END;
+$$;
 
 -- 1. Profiles Table
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
