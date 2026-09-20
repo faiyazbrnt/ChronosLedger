@@ -27,3 +27,15 @@ This document tracks non-obvious technical and design choices across development
 ### [FS] Two-Tier Data Isolation Architecture (Service Scoping + Postgres RLS)
 - **Context:** Prisma connects using direct PostgreSQL credentials which bypass Postgres RLS by default. Simultaneously, Supabase exposes all tables in the `public` schema via its PostgREST API.
 - **Decision:** Implemented a strict two-tier isolation strategy. Tier 1 mandates explicit `where: { userId }` filtering in every Prisma service function using the cryptographically verified user ID from `supabase.auth.getUser()`. Tier 2 applies PostgreSQL Row-Level Security (`auth.uid() = id` / `auth.uid() = "userId"`) to all public tables, rendering PostgREST endpoints fully impervious to cross-tenant data leaks.
+
+### [FS] Atomic & Idempotent Account Initialization in /auth/confirm
+- **Context:** Supabase sends confirmation emails containing a verification link. Multiple link clicks, email scanners, or network retries could invoke `/auth/confirm` multiple times.
+- **Decision:** Encapsulated account bootstrapping inside `upsertProfileAndSettings` using a single Prisma `$transaction`. Both `Profile` and `Settings` are upserted with safe default settings (`lunchDeductionEnabled: true`, `lunchBreakMinutes: 60`, `currency: 'PHP'`). Re-invoking the confirmation route is strictly idempotent and cannot cause duplicate-key collisions.
+
+### [FS] Unverified Account Gatekeeping with Immediate Session Termination
+- **Context:** Supabase default configuration might authenticate users even before their email address has been verified if configured with email confirmations enabled.
+- **Decision:** Enforced application-level gatekeeping in both `signInAction` and `middleware.ts`. If `user.email_confirmed_at` is null, the action immediately invokes `supabase.auth.signOut()` and returns `{ ok: false, unverified: true, email }`. The client UI displays a targeted verification alert with an integrated resend verification trigger.
+
+### [FE] Decoupled Auth Injection into Shell via Layout UserSlot
+- **Context:** Mechanical boundary rules forbid `src/components/layout/*` from importing from `src/features/*`. However, the AppShell requires a functional `LogoutButton` in both the desktop sidebar and mobile header.
+- **Decision:** AppShell defines a generic `userSlot?: React.ReactNode` prop. The root app layout (`src/app/(app)/layout.tsx`) imports `LogoutButton` from `@/features/auth` and injects it into `AppShell`, preserving strict architectural boundaries with zero lint violations.

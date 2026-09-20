@@ -33,7 +33,57 @@ export async function updateSession(request: NextRequest) {
   });
 
   // Always use getUser() instead of getSession() for security
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  const isAuthRoute =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/verify-email");
+
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/dtr") ||
+    pathname.startsWith("/budget") ||
+    pathname.startsWith("/settings");
+
+  // Helper to copy refreshed session cookies to the redirect response
+  const createRedirect = (url: URL) => {
+    const redirectResponse = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie);
+    });
+    return redirectResponse;
+  };
+
+  // 1. Unauthenticated user trying to access a protected route
+  if (!user && isProtectedRoute) {
+    const loginUrl = new URL("/login", request.url);
+    return createRedirect(loginUrl);
+  }
+
+  // 2. Authenticated user handling
+  if (user) {
+    const isConfirmed = Boolean(user.email_confirmed_at);
+
+    // If unconfirmed and attempting protected routes, send to verify-email
+    if (!isConfirmed && isProtectedRoute) {
+      const verifyUrl = new URL("/verify-email", request.url);
+      if (user.email) {
+        verifyUrl.searchParams.set("email", user.email);
+      }
+      return createRedirect(verifyUrl);
+    }
+
+    // If confirmed and attempting auth pages, send to dashboard
+    if (isConfirmed && isAuthRoute) {
+      const dashboardUrl = new URL("/dashboard", request.url);
+      return createRedirect(dashboardUrl);
+    }
+  }
 
   return supabaseResponse;
 }

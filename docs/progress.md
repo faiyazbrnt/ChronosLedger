@@ -7,8 +7,8 @@
 | **Phase 0** | Foundation & Harness | **DONE** | ✅ typecheck, lint, test, db:generate, and build pass |
 | **Phase 1** | Design System & Shell | **DONE** | ✅ Both themes render, no theme flash, contrast verified, keyboard nav |
 | **Phase 2** | Database & Prisma | **DONE** | ✅ prisma validate passes, migrations generated, RLS policies created, isolation documented |
-| **Phase 3** | Supabase Auth & Session | NEXT | Register, verify email once, login, logout, route protection |
-| **Phase 4** | Settings | PENDING | Lunch on/off & duration, currency settings persist |
+| **Phase 3** | Supabase Auth & Session | **DONE** | ✅ Register, verify email once, idempotent profile+settings upsert, login, unverified block, logout, route protection |
+| **Phase 4** | Settings | NEXT | Lunch on/off & duration, currency settings persist |
 | **Phase 5** | DTR (Daily Time Record) | PENDING | Pure calculators tested, entries CRUD, week/month views |
 | **Phase 6** | Budget Tracker | PENDING | Allowance fallback, This Week & Monthly tabs, category chart |
 | **Phase 7** | Dashboard & Polish | PENDING | Weekly hours & budget summary, responsive & a11y passes |
@@ -44,4 +44,22 @@
   - Documented complete per-user isolation architecture and SQL verification test in `docs/isolation.md`.
   - Ensured `.env` is safely gitignored while `.env.example` remains tracked.
 - **Next:** Phase 3 (Supabase Auth & Session).
+- **Blockers:** None.
+
+## Phase 3 Log
+- **Done:**
+  - Implemented client validation schemas with Zod (`loginSchema`, `registerSchema`, `resendVerificationSchema`) and pure validation unit tests (15 passing tests across repo).
+  - Built typed server actions in `src/features/auth/actions/auth-actions.ts` (`registerAction`, `loginAction`, `resendVerificationAction`, `signOutAction`) returning `{ ok: true, data } | { ok: false, error, fieldErrors, unverified }`.
+  - Implemented unverified account protection: blocks unconfirmed accounts from logging in, terminates any unconfirmed Supabase session, and surfaces a dedicated resend CTA.
+  - Implemented `/auth/confirm/route.ts` with dual support for `token_hash` OTP and PKCE `code` exchange.
+  - Built idempotent `upsertProfileAndSettings` database transaction in `src/features/auth/services/auth-service.ts` that creates/updates `Profile` and initializes default `Settings` (`lunchDeductionEnabled: true`, `lunchBreakMinutes: 60`, `currency: 'PHP'`) in a single atomic transaction.
+  - Created high-aesthetic interactive client components:
+    - `LoginForm`: inline field errors, password toggle, unverified banner with inline resend action.
+    - `RegisterForm`: password matching validation, minimum 8 characters validation, password toggles, loading state.
+    - `VerifyEmailContent`: custom pending screen with mail badge, 60s cooldown timer for resend button.
+    - `LogoutButton`: accessible sign-out button with pending transition spinner.
+  - Configured route protection in `src/lib/supabase/middleware.ts`: protects app routes (`/dashboard`, `/dtr`, `/budget`, `/settings`), redirects authenticated users away from auth pages, and preserves cookies across redirects.
+  - Decoupled `userSlot` in `AppShell` allowing `LogoutButton` to be injected from `layout.tsx` without violating mechanical feature boundary rules.
+  - All quality gates green: `typecheck`, `lint`, `test`, `build`.
+- **Next:** Phase 4 (Settings).
 - **Blockers:** None.

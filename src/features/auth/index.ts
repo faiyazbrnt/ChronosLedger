@@ -2,4 +2,8 @@ export * from "./actions/auth-actions";
 export * from "./schemas";
 export * from "./types";
 export * from "./components/auth-card";
+export * from "./components/login-form";
+export * from "./components/register-form";
+export * from "./components/verify-email-content";
+export * from "./components/logout-button";
 export * from "./services/auth-service";

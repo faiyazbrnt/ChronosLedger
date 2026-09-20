@@ -1,5 +1,6 @@
-import Link from "next/link";
-import { AuthCard } from "@/features/auth";
+import { Suspense } from "react";
+import { AuthCard, VerifyEmailContent } from "@/features/auth";
+import { Skeleton } from "@/components/ui";
 
 export default function VerifyEmailPage() {
   return (
@@ -8,16 +9,17 @@ export default function VerifyEmailPage() {
         title="Verify your email"
         description="We've sent a verification link to your email address."
       >
-        <div className="space-y-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Please click the link in your email to activate your account and proceed to the dashboard.
-          </p>
-          <div className="pt-2">
-            <Link href="/login" className="text-sm font-semibold text-primary underline underline-offset-4">
-              Back to sign in
-            </Link>
-          </div>
-        </div>
+        <Suspense
+          fallback={
+            <div className="space-y-4">
+              <Skeleton className="h-14 w-14 rounded-2xl mx-auto" />
+              <Skeleton className="h-8 w-3/4 mx-auto" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          }
+        >
+          <VerifyEmailContent />
+        </Suspense>
       </AuthCard>
     </div>
   );

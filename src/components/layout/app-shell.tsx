@@ -15,6 +15,7 @@ import { ThemeToggle } from "./theme-toggle";
 
 interface AppShellProps {
   children: React.ReactNode;
+  userSlot?: React.ReactNode;
 }
 
 const navItems = [
@@ -40,7 +41,7 @@ const navItems = [
   },
 ];
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, userSlot }: AppShellProps) {
   const pathname = usePathname();
 
   return (
@@ -99,21 +100,24 @@ export function AppShell({ children }: AppShellProps) {
           </nav>
 
           {/* Sidebar Footer with Theme Toggle & User Info */}
-          <div className="p-4 border-t border-border/80 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="h-8 w-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center shrink-0 border border-border">
-                <User className="h-4 w-4" />
+          <div className="p-4 border-t border-border/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-8 w-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center shrink-0 border border-border">
+                  <User className="h-4 w-4" />
+                </div>
+                <div className="truncate">
+                  <p className="text-xs font-semibold text-foreground truncate">
+                    Account
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    Online
+                  </p>
+                </div>
               </div>
-              <div className="truncate">
-                <p className="text-xs font-semibold text-foreground truncate">
-                  My Account
-                </p>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  Local Session
-                </p>
-              </div>
+              <ThemeToggle />
             </div>
-            <ThemeToggle />
+            {userSlot && <div className="pt-0.5">{userSlot}</div>}
           </div>
         </div>
       </aside>
@@ -130,7 +134,10 @@ export function AppShell({ children }: AppShellProps) {
               ChronosLedger
             </span>
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {userSlot}
+          </div>
         </header>
 
         {/* Page Main Content */}
