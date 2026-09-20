@@ -128,6 +128,35 @@
   - Added accessible keyboard skip-to-main-content link in `src/app/layout.tsx`.
   - Verified responsive design (desktop sidebar + mobile bottom navigation bar + mobile header) across both themes.
   - All quality gates green: `bun run typecheck`, `bun run lint`, `bun test`, `bun run build`.
-- **Next:** Project complete! All 8 phases (Phase 0 through Phase 7) fulfilled and verified.
+- **Next:** System Logo implementation completed.
 - **Blockers:** None.
+
+---
+
+## Brand & Identity: System Logo Implementation
+- **Done:**
+  - Extracted and cropped user's official ChronosLedger emblem (Ionic column, Chronos clock, laurel wreath, analytics grid, gold coin) using a custom `sharp` pipeline (`scripts/generate-brand-assets.ts`).
+  - Generated multi-resolution assets in `public/brand/`:
+    - `logo.png` (286x286 master cropped squircle)
+    - `logo-original.png` (500x500 original asset)
+    - `logo-512.png`, `logo-192.png`, `logo-64.png`, `logo-32.png`, `logo-16.png`
+    - `logo.svg` (high-fidelity vector version)
+  - Generated browser tab and PWA assets:
+    - `src/app/icon.png` and `src/app/apple-icon.png` (Next.js App Router automated icon routes)
+    - `src/app/favicon.ico` (multi-resolution 16x16, 32x32, 48x48 ICO file)
+  - Configured Next.js metadata in `src/app/layout.tsx`: `title`, `description`, `metadataBase`, `icons`, and `openGraph` image.
+  - Implemented `<SystemLogo />` and `<Brand />` components in `src/components/ui/system-logo.tsx`:
+    - Size presets: `xs` (20px), `sm` (28px), `md` (36px), `lg` (44px), `xl` (64px), `2xl` (96px).
+    - Smooth hover micro-interaction (`hover:scale-105 active:scale-95`).
+    - Next/Image optimization with eager `priority` loading and zero layout shift.
+    - Re-exported through public barrels `src/components/ui/index.ts` and `src/components/layout/index.ts`.
+  - Replaced temporary placeholder icons (`CalendarClock`) with `<Brand />` in:
+    - `src/components/layout/app-shell.tsx` (Desktop sidebar and mobile header)
+    - `src/features/auth/components/auth-card.tsx` (Auth login and signup header)
+  - Adjusted sidebar header layout and typography:
+    - Removed tagline/subtitle text ("DTR & Budget Tracker") from the top-left sidebar header.
+    - Vertically centered "ChronosLedger" directly with the adjacent logo icon.
+  - Updated HTML document and browser tab title to "ChronosLedger".
+  - All quality gates 100% green: `bun run typecheck`, `bun run lint`, `bun test`, `bun run build`.
+- **Status:** Complete.
 

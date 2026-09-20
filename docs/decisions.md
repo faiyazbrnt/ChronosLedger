@@ -72,8 +72,12 @@ This document tracks non-obvious technical and design choices across development
 - **Context:** The Dashboard aggregates data from `Profile`, `Settings`, `DtrEntry`, `WeeklyAllowance`, and `Expense`. Directly importing between `@/features/dtr`, `@/features/budget`, and `@/features/dashboard` is strictly blocked by ESLint boundary rules.
 - **Decision:** Encapsulated unified aggregation inside `src/features/dashboard/services/dashboard-service.ts`. Because service layers are granted authorized access to `prisma`, it performs optimized parallel queries across models, computes pure derived metrics via `calc-dashboard.ts`, and serializes a unified typed `DashboardData` payload directly for SSR page consumption.
 
-### [FE] Responsive Multi-Tier KPI Dashboard Architecture & Skip-Link Navigation
-- **Context:** Mobile users need quick at-a-glance shift and expense shortcuts without screen clutter, while desktop users benefit from expansive side-by-side activity feeds. In addition, keyboard navigation requires rapid skipping past navigation menus.
-- **Decision:** Designed `DashboardView` with a multi-tier structure: responsive KPI cards with dynamic progress bars, actionable health alert banners, side-by-side recent activity feeds with empty states and deep links, and integrated an accessible skip-to-main-content link in `RootLayout`.
+### [FE & FS] System Logo Architecture and Multi-Resolution Asset Pipeline
+- **Context:** The system required official branding implementation based on the high-fidelity ChronosLedger emblem (featuring an Ionic marble column, embedded Chronos clock, laurel wreath, financial column charts, ledger grid lines, and a gleaming gold coin).
+- **Decision:** Built a multi-resolution asset pipeline using `sharp` in Bun:
+  1. Cropped the original 500x500 asset tightly to the 286x286 squircle boundary (`public/brand/logo.png`), eliminating transparent margins for crisp display at any scale.
+  2. Generated high-DPI assets (`logo-512.png`, `logo-192.png`, `logo-64.png`, `logo-32.png`, `logo-16.png`), a vector version (`logo.svg`), and multi-resolution `favicon.ico`.
+  3. Integrated Next.js 15 App Router static metadata conventions (`src/app/icon.png` and `src/app/apple-icon.png`) with `metadataBase`, OpenGraph cards, and apple touch icons in `src/app/layout.tsx`.
+  4. Created reusable `<SystemLogo />` and `<Brand />` components in `src/components/ui/system-logo.tsx` with size presets (`xs` through `2xl`), micro-interaction scale transitions, and accessible alt labels, cleanly replacing all temporary placeholder icons in `AppShell` and `AuthCard`.
 
 
