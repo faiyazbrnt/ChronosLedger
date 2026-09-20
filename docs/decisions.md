@@ -23,3 +23,7 @@ This document tracks non-obvious technical and design choices across development
 ### [FE] Responsive Navigation Split (Desktop Sidebar + Mobile Bottom Tab Bar)
 - **Context:** DTR and expense logging are mobile-first actions used on phones, while administrative review and monthly trends benefit from wide desktop layouts.
 - **Decision:** AppShell renders a fixed `w-64` desktop sidebar on screens `≥ md`, and switches to a touch-optimized bottom tab bar (`min-h-[48px]`, touch targets `≥ 44px`) with safe-area spacing and a compact top brand header on mobile screens.
+
+### [FS] Two-Tier Data Isolation Architecture (Service Scoping + Postgres RLS)
+- **Context:** Prisma connects using direct PostgreSQL credentials which bypass Postgres RLS by default. Simultaneously, Supabase exposes all tables in the `public` schema via its PostgREST API.
+- **Decision:** Implemented a strict two-tier isolation strategy. Tier 1 mandates explicit `where: { userId }` filtering in every Prisma service function using the cryptographically verified user ID from `supabase.auth.getUser()`. Tier 2 applies PostgreSQL Row-Level Security (`auth.uid() = id` / `auth.uid() = "userId"`) to all public tables, rendering PostgREST endpoints fully impervious to cross-tenant data leaks.

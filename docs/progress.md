@@ -6,8 +6,8 @@
 |---|---|---|---|
 | **Phase 0** | Foundation & Harness | **DONE** | ✅ typecheck, lint, test, db:generate, and build pass |
 | **Phase 1** | Design System & Shell | **DONE** | ✅ Both themes render, no theme flash, contrast verified, keyboard nav |
-| **Phase 2** | Database & Prisma | NEXT | Migrations apply, RLS policies active, isolation verified |
-| **Phase 3** | Supabase Auth & Session | PENDING | Register, verify email once, login, logout, route protection |
+| **Phase 2** | Database & Prisma | **DONE** | ✅ prisma validate passes, migrations generated, RLS policies created, isolation documented |
+| **Phase 3** | Supabase Auth & Session | NEXT | Register, verify email once, login, logout, route protection |
 | **Phase 4** | Settings | PENDING | Lunch on/off & duration, currency settings persist |
 | **Phase 5** | DTR (Daily Time Record) | PENDING | Pure calculators tested, entries CRUD, week/month views |
 | **Phase 6** | Budget Tracker | PENDING | Allowance fallback, This Week & Monthly tabs, category chart |
@@ -33,6 +33,15 @@
   - Built core UI primitives (`Button`, `Card`, `Badge`, `Skeleton`) in `src/components/ui/` with CVA, variants, and accessible focus rings.
   - Built responsive AppShell with desktop sidebar (`w-64`, active route indicators, brand logo) and mobile bottom tab bar (touch targets ≥ 44px, sticky bottom).
   - Enhanced all feature views (`dashboard-view`, `dtr-view`, `budget-view`, `settings-form`, `auth-card`) to showcase high-aesthetic cards, states, and typography.
-  - All 5 gates verified green (`typecheck`, `lint`, `test`, `db:generate`, `build`).
-- **Next:** Phase 2 (Database & Prisma).
+  - All gates verified green (`typecheck`, `lint`, `test`, `db:generate`, `build`).
+
+## Phase 2 Log
+- **Done:**
+  - Verified `prisma/schema.prisma` with `bunx prisma validate` (exit code 0).
+  - Generated initial DDL migration in `prisma/migrations/0_init/migration.sql` (`profiles`, `settings`, `dtr_entries`, `expenses`, `weekly_allowances`).
+  - Created defense-in-depth Row-Level Security migration in `prisma/migrations/1_rls_policies/migration.sql` with owner policies (`auth.uid() = id` / `auth.uid() = "userId"`).
+  - Verified Prisma client singleton pattern in `src/lib/prisma.ts`.
+  - Documented complete per-user isolation architecture and SQL verification test in `docs/isolation.md`.
+  - Ensured `.env` is safely gitignored while `.env.example` remains tracked.
+- **Next:** Phase 3 (Supabase Auth & Session).
 - **Blockers:** None.
