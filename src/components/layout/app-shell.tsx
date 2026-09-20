@@ -8,10 +8,10 @@ import {
   Clock,
   Wallet,
   Settings,
-  CalendarClock,
   User,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
+import { Brand } from "@/components/ui/system-logo";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -53,18 +53,11 @@ export function AppShell({ children, userSlot }: AppShellProps) {
       >
         <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
           {/* Brand Header */}
-          <div className="flex items-center gap-3 px-6 pb-6 border-b border-border/80">
-            <div className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-md">
-              <CalendarClock className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="font-bold text-base tracking-tight text-foreground block">
-                ChronosLedger
-              </span>
-              <span className="text-xs text-muted-foreground font-medium block">
-                DTR &amp; Budget Tracker
-              </span>
-            </div>
+          <div className="px-6 pb-5 border-b border-border/80 flex items-center">
+            <Brand
+              size="lg"
+              href="/dashboard"
+            />
           </div>
 
           {/* Navigation Links */}
@@ -126,14 +119,7 @@ export function AppShell({ children, userSlot }: AppShellProps) {
       <div className="flex-1 flex flex-col md:pl-64 min-w-0">
         {/* Mobile Header (Hidden on Desktop) */}
         <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card/85 backdrop-blur-md">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
-              <CalendarClock className="h-4 w-4" />
-            </div>
-            <span className="font-bold text-base tracking-tight text-foreground">
-              ChronosLedger
-            </span>
-          </Link>
+          <Brand size="sm" href="/dashboard" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             {userSlot}

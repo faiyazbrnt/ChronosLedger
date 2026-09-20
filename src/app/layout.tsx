@@ -14,8 +14,36 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DTR & Budget Tracker",
-  description: "Personal Daily Time Record and Budget Management",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  ),
+  title: "ChronosLedger",
+  description:
+    "Precision Daily Time Record and Personal Budget Management with live analytics and automated lunch snapshotting.",
+  icons: {
+    icon: [
+      { url: "/brand/logo-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/logo.png", sizes: "286x286", type: "image/png" },
+    ],
+    shortcut: "/brand/logo-32.png",
+    apple: [
+      { url: "/brand/logo-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/brand/logo.png", sizes: "286x286", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    title: "ChronosLedger",
+    description:
+      "Precision Daily Time Record and Personal Budget Management with live analytics.",
+    images: [
+      {
+        url: "/brand/logo-512.png",
+        width: 512,
+        height: 512,
+        alt: "ChronosLedger Systems Logo",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
