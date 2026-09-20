@@ -1,26 +1,90 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Design System Mapping:
+  - Light mode surface/background: #FFEFCC
+  - Light mode accent/action (buttons, links, active nav): #660000 (11:1 contrast on #FFEFCC)
+  - Note on shadcn convention: --primary is the button/accent color (#660000),
+    --primary-foreground is text on that button (#FFEFCC),
+    --background is the app surface (#FFEFCC).
+  - Dark mode is strictly black and white: neutral black surface, white accents, neutral gray borders.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #ffefcc;
+  --foreground: #260000;
+  --card: #fff6e0;
+  --card-foreground: #260000;
+  --popover: #fff6e0;
+  --popover-foreground: #260000;
+  --primary: #660000;
+  --primary-foreground: #ffefcc;
+  --secondary: #fae4b5;
+  --secondary-foreground: #400000;
+  --muted: #f5dc9e;
+  --muted-foreground: #6b3333;
+  --accent: #f0d490;
+  --accent-foreground: #400000;
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --border: #e0be77;
+  --input: #e0be77;
+  --ring: #660000;
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #121215;
+  --card-foreground: #fafafa;
+  --popover: #121215;
+  --popover-foreground: #fafafa;
+  --primary: #ffffff;
+  --primary-foreground: #09090b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
 }

@@ -1,0 +1,97 @@
+// Prisma Schema for DTR & Budget Tracker
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ExpenseCategory {
+  FOOD
+  TRANSPORT
+  BILLS
+  SHOPPING
+  HEALTH
+  ENTERTAINMENT
+  OTHER
+}
+
+model Profile {
+  id         String     @id @db.Uuid // Matches auth.users.id
+  email      String     @unique
+  verifiedAt DateTime?
+  createdAt  DateTime   @default(now())
+
+  settings   Settings?
+  dtrEntries DtrEntry[]
+  expenses   Expense[]
+  allowances WeeklyAllowance[]
+
+  @@map("profiles")
+}
+
+model Settings {
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @unique @db.Uuid
+  lunchDeductionEnabled Boolean  @default(true)
+  lunchBreakMinutes     Int      @default(60)
+  currency              String   @default("PHP")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("settings")
+}
+
+model DtrEntry {
+  id                  String   @id @default(uuid()) @db.Uuid
+  userId              String   @db.Uuid
+  workDate            DateTime @db.Date
+  timeInMinutes       Int
+  timeOutMinutes      Int
+  lunchMinutesApplied Int
+  note                String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workDate])
+  @@index([userId, workDate])
+  @@map("dtr_entries")
+}
+
+model Expense {
+  id          String          @id @default(uuid()) @db.Uuid
+  userId      String          @db.Uuid
+  spentOn     DateTime        @db.Date
+  category    ExpenseCategory
+  amountMinor Int
+  note        String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, spentOn])
+  @@map("expenses")
+}
+
+model WeeklyAllowance {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  weekStart   DateTime @db.Date // Monday
+  amountMinor Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@map("weekly_allowances")
+}
