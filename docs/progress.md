@@ -8,8 +8,8 @@
 | **Phase 1** | Design System & Shell | **DONE** | ✅ Both themes render, no theme flash, contrast verified, keyboard nav |
 | **Phase 2** | Database & Prisma | **DONE** | ✅ prisma validate passes, migrations generated, RLS policies created, isolation documented |
 | **Phase 3** | Supabase Auth & Session | **DONE** | ✅ Register, verify email once, idempotent profile+settings upsert, login, unverified block, logout, route protection |
-| **Phase 4** | Settings | NEXT | Lunch on/off & duration, currency settings persist |
-| **Phase 5** | DTR (Daily Time Record) | PENDING | Pure calculators tested, entries CRUD, week/month views |
+| **Phase 4** | Settings | **DONE** | ✅ Lunch on/off & duration, currency settings persist, live preview, audited immutability guarantee |
+| **Phase 5** | DTR (Daily Time Record) | NEXT | Pure calculators tested, entries CRUD, week/month views |
 | **Phase 6** | Budget Tracker | PENDING | Allowance fallback, This Week & Monthly tabs, category chart |
 | **Phase 7** | Dashboard & Polish | PENDING | Weekly hours & budget summary, responsive & a11y passes |
 
@@ -62,4 +62,21 @@
   - Decoupled `userSlot` in `AppShell` allowing `LogoutButton` to be injected from `layout.tsx` without violating mechanical feature boundary rules.
   - All quality gates green: `typecheck`, `lint`, `test`, `build`.
 - **Next:** Phase 4 (Settings).
+- **Blockers:** None.
+
+## Phase 4 Log
+- **Done:**
+  - Implemented `updateSettingsAction` in `src/features/settings/actions/settings-actions.ts` with `supabase.auth.getUser()` verification, input validation against `settingsSchema`, and cache revalidation across `/settings`, `/dashboard`, `/budget`, `/dtr`.
+  - Built typed service layer in `src/features/settings/services/settings-service.ts` with scoped Prisma queries (`getUserSettings`, `updateUserSettings`).
+  - Implemented interactive `SettingsForm` client component:
+    - Accessible lunch deduction toggle switch (`role="switch"`, `aria-checked`).
+    - Quick-select lunch duration chips (`15m`, `30m`, `45m`, `60m`, `90m`) and custom input with range validation (0–240 mins).
+    - Currency selector with presets (`PHP`, `USD`, `EUR`, `GBP`, `JPY`, `SGD`, `AUD`, `CAD`) and custom 3-letter uppercase input.
+    - Live interactive currency preview formatted via `formatMinorUnits` and `Intl.NumberFormat`.
+    - Audited Snapshot Guarantee callout explaining that past DTR entries retain their snapshot lunch deductions.
+    - Accessible loading indicators and status banners (`aria-live="polite"`).
+  - Wired SSR data loading in `src/app/(app)/settings/page.tsx`, preloading current user settings with zero layout shift.
+  - Added pure unit tests in `src/features/settings/lib/settings-validation.test.ts` (all 22 unit tests green across repo).
+  - All quality gates green: `typecheck`, `lint`, `test`, `build`.
+- **Next:** Phase 5 (DTR - Daily Time Record).
 - **Blockers:** None.

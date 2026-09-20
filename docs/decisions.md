@@ -39,3 +39,11 @@ This document tracks non-obvious technical and design choices across development
 ### [FE] Decoupled Auth Injection into Shell via Layout UserSlot
 - **Context:** Mechanical boundary rules forbid `src/components/layout/*` from importing from `src/features/*`. However, the AppShell requires a functional `LogoutButton` in both the desktop sidebar and mobile header.
 - **Decision:** AppShell defines a generic `userSlot?: React.ReactNode` prop. The root app layout (`src/app/(app)/layout.tsx`) imports `LogoutButton` from `@/features/auth` and injects it into `AppShell`, preserving strict architectural boundaries with zero lint violations.
+
+### [FE] Live Currency Format Preview with Intl.NumberFormat Resilience
+- **Context:** When users type custom 3-letter currency codes into the settings form, invalid or incomplete strings could trigger `RangeError: Invalid currency code` in `Intl.NumberFormat`.
+- **Decision:** Wrapped live currency formatting in a defensive parsing try/catch block within `SettingsForm`. If an unrecognized or incomplete code is entered, the UI gracefully falls back and surfaces an informative validation hint without crashing the component tree.
+
+### [FS] Historical DTR Lunch Immutability Enforcement
+- **Context:** If a user modifies their default lunch break duration (e.g. from 60 to 45 minutes), recalculating past DTR entries would alter historical work logs, timesheets, and hours previously approved or tracked.
+- **Decision:** Changes made via `updateSettingsAction` strictly apply only to future DTR entries. All DTR entries permanently store their snapshotted `lunchMinutesApplied` at creation time, preserving audited historical accuracy.
