@@ -82,6 +82,10 @@ This document tracks non-obvious technical and design choices across development
   2. Attached cryptographically verified user identity (`x-user-id`, `x-user-email`) in middleware request headers and created `getAuthUser()` in `src/lib/supabase/server.ts` to resolve user identity in 0ms (in-memory) with zero network calls to Supabase, with automatic fallback.
   3. Parallelized independent database queries using `Promise.all` in `budget/page.tsx` and `dtr/page.tsx`, reducing database latency by over 60%.
 
+### [FS & FE] Delayed Link-Pending Feedback and Eager Module Prefetch
+- **Context:** The route-level loading boundary communicates a slow destination render, but it cannot indicate which module link initiated navigation. The remaining allowance fallback queries also needlessly waited for the exact-week lookup before beginning their independent historical lookup.
+- **Decision:** Used Next 15.5.25's supported `useLinkStatus` API inside one reusable AppShell module-link component. It shows a `Loader2` indicator only after 150 ms, so cached navigations do not flicker; it includes `role="status"`, `aria-live="polite"`, `aria-busy`, a visually hidden loading label, and `motion-reduce:animate-none`. Top-level module links opt into full App Router prefetching. Exact-week and historical allowance reads now run in `Promise.all`, retaining the exact-week-first result semantics while removing the avoidable waterfall.
+
 ### [FE] Lighthouse & Core Web Vitals Optimization Pipeline
 - **Context:** Achieving an 80+ to 90+ Lighthouse Performance score required addressing critical rendering path bottlenecks, total blocking time (TBT), and asset weight across routes.
 - **Decision:**

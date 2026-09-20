@@ -78,31 +78,31 @@ export async function getWeeklyAllowance(params: {
   userId: string;
   weekStart: Date;
 }) {
-  const current = await prisma.weeklyAllowance.findUnique({
-    where: {
-      userId_weekStart: {
-        userId: params.userId,
-        weekStart: params.weekStart,
+  const [current, previous] = await Promise.all([
+    prisma.weeklyAllowance.findUnique({
+      where: {
+        userId_weekStart: {
+          userId: params.userId,
+          weekStart: params.weekStart,
+        },
       },
-    },
-  });
+    }),
+    prisma.weeklyAllowance.findFirst({
+      where: {
+        userId: params.userId,
+        weekStart: {
+          lt: params.weekStart,
+        },
+      },
+      orderBy: {
+        weekStart: "desc",
+      },
+    }),
+  ]);
 
   if (current) {
     return { ...current, isInherited: false };
   }
-
-  // Fallback: prefill from most recent earlier week
-  const previous = await prisma.weeklyAllowance.findFirst({
-    where: {
-      userId: params.userId,
-      weekStart: {
-        lt: params.weekStart,
-      },
-    },
-    orderBy: {
-      weekStart: "desc",
-    },
-  });
 
   if (previous) {
     return {
