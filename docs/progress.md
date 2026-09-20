@@ -5,8 +5,8 @@
 | Phase | Description | Status | Exit Criteria Met |
 |---|---|---|---|
 | **Phase 0** | Foundation & Harness | **DONE** | ✅ typecheck, lint, test, db:generate, and build pass |
-| **Phase 1** | Design System & Shell | NEXT | Both themes render, no theme flash, contrast checked, keyboard nav |
-| **Phase 2** | Database & Prisma | PENDING | Migrations apply, RLS policies active, isolation verified |
+| **Phase 1** | Design System & Shell | **DONE** | ✅ Both themes render, no theme flash, contrast verified, keyboard nav |
+| **Phase 2** | Database & Prisma | NEXT | Migrations apply, RLS policies active, isolation verified |
 | **Phase 3** | Supabase Auth & Session | PENDING | Register, verify email once, login, logout, route protection |
 | **Phase 4** | Settings | PENDING | Lunch on/off & duration, currency settings persist |
 | **Phase 5** | DTR (Daily Time Record) | PENDING | Pure calculators tested, entries CRUD, week/month views |
@@ -25,5 +25,14 @@
   - Full scripts configured: `dev`, `build`, `lint`, `typecheck`, `test`, `db:generate`, `db:migrate`.
   - GitHub Actions CI workflow created in `.github/workflows/ci.yml`.
   - `.env.example`, `docs/decisions.md`, `docs/progress.md`, and `AGENTS.md` established.
-- **Next:** Phase 1 (Design System & Shell).
+
+## Phase 1 Log
+- **Done:**
+  - Designed and configured full design token system in `src/app/globals.css` with exact `#FFEFCC`/`#660000` mapping and `color-mix()` derived surfaces.
+  - Implemented strictly black-and-white dark mode palette (`#000000` surface, `#ffffff` accent/text, `#27272a` borders) with `next-themes` and zero theme flash.
+  - Built core UI primitives (`Button`, `Card`, `Badge`, `Skeleton`) in `src/components/ui/` with CVA, variants, and accessible focus rings.
+  - Built responsive AppShell with desktop sidebar (`w-64`, active route indicators, brand logo) and mobile bottom tab bar (touch targets ≥ 44px, sticky bottom).
+  - Enhanced all feature views (`dashboard-view`, `dtr-view`, `budget-view`, `settings-form`, `auth-card`) to showcase high-aesthetic cards, states, and typography.
+  - All 5 gates verified green (`typecheck`, `lint`, `test`, `db:generate`, `build`).
+- **Next:** Phase 2 (Database & Prisma).
 - **Blockers:** None.

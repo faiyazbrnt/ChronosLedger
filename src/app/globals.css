@@ -6,52 +6,50 @@
   Design System Mapping:
   - Light mode surface/background: #FFEFCC
   - Light mode accent/action (buttons, links, active nav): #660000 (11:1 contrast on #FFEFCC)
-  - Note on shadcn convention: --primary is the button/accent color (#660000),
-    --primary-foreground is text on that button (#FFEFCC),
-    --background is the app surface (#FFEFCC).
-  - Dark mode is strictly black and white: neutral black surface, white accents, neutral gray borders.
+  - Card, secondary, muted, border derived via color-mix() from #FFEFCC and #660000.
+  - Dark mode: Strictly black and white (#000000 surface, #ffffff accent/foreground, neutral borders).
 */
 
 :root {
   --background: #ffefcc;
-  --foreground: #260000;
-  --card: #fff6e0;
-  --card-foreground: #260000;
-  --popover: #fff6e0;
-  --popover-foreground: #260000;
+  --foreground: color-mix(in srgb, #660000 90%, black);
+  --card: color-mix(in srgb, #ffefcc 92%, #660000 8%);
+  --card-foreground: color-mix(in srgb, #660000 90%, black);
+  --popover: color-mix(in srgb, #ffefcc 92%, #660000 8%);
+  --popover-foreground: color-mix(in srgb, #660000 90%, black);
   --primary: #660000;
   --primary-foreground: #ffefcc;
-  --secondary: #fae4b5;
-  --secondary-foreground: #400000;
-  --muted: #f5dc9e;
-  --muted-foreground: #6b3333;
-  --accent: #f0d490;
-  --accent-foreground: #400000;
+  --secondary: color-mix(in srgb, #ffefcc 82%, #660000 18%);
+  --secondary-foreground: #660000;
+  --muted: color-mix(in srgb, #ffefcc 82%, #660000 18%);
+  --muted-foreground: color-mix(in srgb, #660000 70%, #ffefcc 30%);
+  --accent: color-mix(in srgb, #ffefcc 76%, #660000 24%);
+  --accent-foreground: #660000;
   --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
-  --border: #e0be77;
-  --input: #e0be77;
+  --border: color-mix(in srgb, #660000 22%, #ffefcc 78%);
+  --input: color-mix(in srgb, #660000 22%, #ffefcc 78%);
   --ring: #660000;
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #121215;
-  --card-foreground: #fafafa;
-  --popover: #121215;
-  --popover-foreground: #fafafa;
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0c0c0e;
+  --card-foreground: #ffffff;
+  --popover: #0c0c0e;
+  --popover-foreground: #ffffff;
   --primary: #ffffff;
-  --primary-foreground: #09090b;
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  --muted: #27272a;
+  --primary-foreground: #000000;
+  --secondary: #1a1a1e;
+  --secondary-foreground: #ffffff;
+  --muted: #161619;
   --muted-foreground: #a1a1aa;
-  --accent: #27272a;
-  --accent-foreground: #fafafa;
-  --destructive: #7f1d1d;
-  --destructive-foreground: #fafafa;
+  --accent: #242428;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
   --border: #27272a;
   --input: #27272a;
   --ring: #ffffff;
@@ -87,4 +85,19 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbars and utility styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
 }
