@@ -169,3 +169,11 @@
   - All quality gates 100% green: `bun run typecheck`, `bun run lint`, `bun test`, `bun run build`.
 - **Status:** Complete.
 
+---
+
+## Module Navigation Feedback & Query Parallelism
+- **Done:** Added an AppShell-wide `useLinkStatus` navigation pattern with a 150 ms delayed, reduced-motion-safe spinner and polite screen-reader status. The shared `(app)/loading.tsx` continues to provide the route-level skeleton for Dashboard, DTR, Budget, and Settings.
+- **Done:** Parallelized exact and historical weekly-allowance reads in both Budget and Dashboard loading paths without changing fallback behavior.
+- **Verification:** `bun run typecheck`, `bun run lint`, `bun test` (57 passing), `bun run db:generate`, and `bun run build` all pass.
+- **Blockers:** Authenticated browser interaction and network throttling require a test account/browser automation, neither of which is available in this environment.
+

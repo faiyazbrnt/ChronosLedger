@@ -33,6 +33,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     settings,
     weekDtrEntries,
     exactAllowance,
+    historicalAllowance,
     weekExpenses,
     recentDtrEntries,
     recentExpenseEntries,
@@ -57,6 +58,17 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
           userId,
           weekStart: mondayDate,
         },
+      },
+    }),
+    prisma.weeklyAllowance.findFirst({
+      where: {
+        userId,
+        weekStart: {
+          lt: mondayDate,
+        },
+      },
+      orderBy: {
+        weekStart: "desc",
       },
     }),
     prisma.expense.findMany({
@@ -87,27 +99,8 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     }),
   ]);
 
-  let allowanceRecord = exactAllowance;
-  let isInherited = false;
-
-  if (!allowanceRecord) {
-    const historicalAllowance = await prisma.weeklyAllowance.findFirst({
-      where: {
-        userId,
-        weekStart: {
-          lt: mondayDate,
-        },
-      },
-      orderBy: {
-        weekStart: "desc",
-      },
-    });
-
-    if (historicalAllowance) {
-      allowanceRecord = historicalAllowance;
-      isInherited = true;
-    }
-  }
+  const allowanceRecord = exactAllowance ?? historicalAllowance;
+  const isInherited = !exactAllowance && Boolean(historicalAllowance);
 
   const currency = settings?.currency ?? "PHP";
   const allowanceMinor = allowanceRecord?.amountMinor ?? 0;

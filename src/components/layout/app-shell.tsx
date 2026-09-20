@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -11,6 +10,7 @@ import {
   User,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
+import { ModuleNavLink } from "./module-nav-link";
 import { Brand } from "@/components/ui/system-logo";
 
 interface AppShellProps {
@@ -65,29 +65,14 @@ export function AppShell({ children, userSlot }: AppShellProps) {
             {navItems.map((item) => {
               const isActive =
                 pathname === item.href || pathname?.startsWith(`${item.href}/`);
-              const Icon = item.icon;
-
               return (
-                <Link
+                <ModuleNavLink
                   key={item.name}
                   href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`group flex items-center gap-3.5 px-3.5 py-2.5 text-sm font-semibold rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted/70 hover:text-foreground active:scale-[0.99]"
-                  }`}
-                >
-                  <Icon
-                    className={`h-5 w-5 shrink-0 transition-colors ${
-                      isActive
-                        ? "text-primary-foreground"
-                        : "text-muted-foreground group-hover:text-foreground"
-                    }`}
-                    aria-hidden="true"
-                  />
-                  <span>{item.name}</span>
-                </Link>
+                  label={item.name}
+                  icon={item.icon}
+                  isActive={isActive}
+                />
               );
             })}
           </nav>
@@ -144,30 +129,15 @@ export function AppShell({ children, userSlot }: AppShellProps) {
             {navItems.map((item) => {
               const isActive =
                 pathname === item.href || pathname?.startsWith(`${item.href}/`);
-              const Icon = item.icon;
-
               return (
-                <Link
+                <ModuleNavLink
                   key={item.name}
                   href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`flex flex-col items-center justify-center min-h-[48px] min-w-[56px] px-2 py-1 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    isActive
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <div
-                    className={`p-1 rounded-lg transition-colors ${
-                      isActive ? "bg-primary/15 text-primary" : ""
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <span className="mt-0.5 text-[11px] leading-none">
-                    {item.name}
-                  </span>
-                </Link>
+                  label={item.name}
+                  icon={item.icon}
+                  isActive={isActive}
+                  compact
+                />
               );
             })}
           </div>
