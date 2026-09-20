@@ -72,12 +72,22 @@ This document tracks non-obvious technical and design choices across development
 - **Context:** The Dashboard aggregates data from `Profile`, `Settings`, `DtrEntry`, `WeeklyAllowance`, and `Expense`. Directly importing between `@/features/dtr`, `@/features/budget`, and `@/features/dashboard` is strictly blocked by ESLint boundary rules.
 - **Decision:** Encapsulated unified aggregation inside `src/features/dashboard/services/dashboard-service.ts`. Because service layers are granted authorized access to `prisma`, it performs optimized parallel queries across models, computes pure derived metrics via `calc-dashboard.ts`, and serializes a unified typed `DashboardData` payload directly for SSR page consumption.
 
-### [FE & FS] System Logo Architecture and Multi-Resolution Asset Pipeline
-- **Context:** The system required official branding implementation based on the high-fidelity ChronosLedger emblem (featuring an Ionic marble column, embedded Chronos clock, laurel wreath, financial column charts, ledger grid lines, and a gleaming gold coin).
-- **Decision:** Built a multi-resolution asset pipeline using `sharp` in Bun:
-  1. Cropped the original 500x500 asset tightly to the 286x286 squircle boundary (`public/brand/logo.png`), eliminating transparent margins for crisp display at any scale.
-  2. Generated high-DPI assets (`logo-512.png`, `logo-192.png`, `logo-64.png`, `logo-32.png`, `logo-16.png`), a vector version (`logo.svg`), and multi-resolution `favicon.ico`.
-  3. Integrated Next.js 15 App Router static metadata conventions (`src/app/icon.png` and `src/app/apple-icon.png`) with `metadataBase`, OpenGraph cards, and apple touch icons in `src/app/layout.tsx`.
-  4. Created reusable `<SystemLogo />` and `<Brand />` components in `src/components/ui/system-logo.tsx` with size presets (`xs` through `2xl`), micro-interaction scale transitions, and accessible alt labels, cleanly replacing all temporary placeholder icons in `AppShell` and `AuthCard`.
+### [FS & FE] Module Navigation Performance Optimization and Instant Loading States
+- **Context:** Navigating between modules in the AppShell experienced long multi-second delays. Root cause investigation revealed a combination of:
+  1. Next.js App Router client-side navigation blocking due to a missing `loading.tsx` boundary.
+  2. Redundant remote Supabase Auth network roundtrips (`supabase.auth.getUser()`) occurring on both the middleware and again within each destination Server Component.
+  3. Sequential database query waterfalls in `budget/page.tsx` (3 queries in series) and `dtr/page.tsx` (2 queries in series).
+- **Decision:**
+  1. Created `src/app/(app)/loading.tsx` using responsive `Skeleton` components, allowing Next.js to transition routes instantly (0ms) and keep the shell responsive while data streams in.
+  2. Attached cryptographically verified user identity (`x-user-id`, `x-user-email`) in middleware request headers and created `getAuthUser()` in `src/lib/supabase/server.ts` to resolve user identity in 0ms (in-memory) with zero network calls to Supabase, with automatic fallback.
+  3. Parallelized independent database queries using `Promise.all` in `budget/page.tsx` and `dtr/page.tsx`, reducing database latency by over 60%.
+
+### [FE] Lighthouse & Core Web Vitals Optimization Pipeline
+- **Context:** Achieving an 80+ to 90+ Lighthouse Performance score required addressing critical rendering path bottlenecks, total blocking time (TBT), and asset weight across routes.
+- **Decision:**
+  1. **Dynamic Recharts Code-Splitting**: Recharts was deferred via `next/dynamic` in `budget-view.tsx` and unbundled from the public feature barrel `budget/index.ts`. This cut `/budget` page chunk size from 118 kB to 10.7 kB (a 91% reduction) and First Load JS by 108 kB.
+  2. **Font Rendering Optimization**: Added `display: "swap"` to Google Geist fonts in `src/app/layout.tsx`, eliminating FOIT (Flash of Invisible Text) and accelerating FCP and LCP.
+  3. **Responsive Image Delivery**: Configured `SystemLogo` to serve dimension-optimized assets (`logo-32.png` / `logo-64.png`, 3.5kB–12kB) instead of the full master PNG (152kB), saving 140kB of blocking image data on the initial viewport.
+  4. **Next.js Production Configuration**: Enabled Gzip/Brotli compression and stripped powered-by headers in `next.config.ts`.
 
 

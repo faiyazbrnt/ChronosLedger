@@ -33,7 +33,16 @@ export function SystemLogo({
   const roundedClass = typeof size === "number" ? "rounded-xl" : SIZE_MAP[size].rounded;
   const shadowClass = typeof size === "number" ? "shadow-sm" : SIZE_MAP[size].shadow;
 
-  const src = format === "svg" ? "/brand/logo.svg" : "/brand/logo.png";
+  let src = "/brand/logo.png";
+  if (format === "svg") {
+    src = "/brand/logo.svg";
+  } else if (dimension <= 32) {
+    src = "/brand/logo-32.png";
+  } else if (dimension <= 64) {
+    src = "/brand/logo-64.png";
+  } else if (dimension <= 192) {
+    src = "/brand/logo-192.png";
+  }
 
   return (
     <div

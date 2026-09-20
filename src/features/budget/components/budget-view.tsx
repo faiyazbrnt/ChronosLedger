@@ -47,10 +47,19 @@ import {
   calculateSafeToSpendPerDay,
   calculateCategoryTotals,
 } from "../lib/calc-budget";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import { deleteExpenseAction } from "../actions/budget-actions";
 import { ExpenseModal } from "./expense-modal";
 import { AllowanceModal } from "./allowance-modal";
-import { CategoryChart } from "./category-chart";
+
+const CategoryChart = dynamic(
+  () => import("./category-chart").then((mod) => mod.CategoryChart),
+  {
+    loading: () => <Skeleton className="h-64 w-full rounded-2xl" />,
+    ssr: false,
+  }
+);
 import type {
   ExpenseData,
   WeeklyAllowanceData,
