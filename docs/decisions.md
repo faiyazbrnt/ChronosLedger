@@ -118,4 +118,13 @@ This document tracks non-obvious technical and design choices across development
 - **Context:** The product owner clarified Calendar is a left-navigation module, not a header modal.
 - **Decision:** Implemented Calendar under the app route and reused DTR service data. Cells are labelled with all states and use CSS-variable hard-stop gradients for overlapping shift/holiday states; fixed-date Philippine holidays cover 2026–2027, while proclamation-dependent dates remain intentionally unlisted pending official confirmation.
 
+### [FE] Deep Dark Slate Sidebar Distinction and Borderless Top Header
+- **Context:** In the initial layout, the desktop navigation sidebar and top header shared the same translucent card background (`bg-card/60`), making the sidebar blend into the content canvas. Additionally, a heavy `#263238` border line separated the header, adding visual clutter.
+- **Decision:**
+  1. Restyled the desktop sidebar to an executive deep dark slate (`#131B21` in light mode, `#090D11` in dark mode) with high-contrast white branding (`text-white`) and emerald hover accents.
+  2. Enhanced `ModuleNavLink` with an elevated active surface (`bg-white/[0.12]`, emerald icon tint) and muted slate-400 inactive links meeting WCAG AAA contrast ratios.
+  3. Completely removed `border-b border-border` on the header and shifted its background to a seamless canvas blend (`bg-background/80 backdrop-blur-md`), allowing the theme toggle, notifications, and account dropdown to float cleanly over the page.
+
+
+
 
