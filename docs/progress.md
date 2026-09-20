@@ -9,8 +9,8 @@
 | **Phase 2** | Database & Prisma | **DONE** | ✅ prisma validate passes, migrations generated, RLS policies created, isolation documented |
 | **Phase 3** | Supabase Auth & Session | **DONE** | ✅ Register, verify email once, idempotent profile+settings upsert, login, unverified block, logout, route protection |
 | **Phase 4** | Settings | **DONE** | ✅ Lunch on/off & duration, currency settings persist, live preview, audited immutability guarantee |
-| **Phase 5** | DTR (Daily Time Record) | NEXT | Pure calculators tested, entries CRUD, week/month views |
-| **Phase 6** | Budget Tracker | PENDING | Allowance fallback, This Week & Monthly tabs, category chart |
+| **Phase 5** | DTR (Daily Time Record) | **DONE** | ✅ Pure calculators tested, entries CRUD, lunch snapshot immutability, week/month views |
+| **Phase 6** | Budget Tracker | NEXT | Allowance fallback, This Week & Monthly tabs, category chart |
 | **Phase 7** | Dashboard & Polish | PENDING | Weekly hours & budget summary, responsive & a11y passes |
 
 ---
@@ -79,4 +79,17 @@
   - Added pure unit tests in `src/features/settings/lib/settings-validation.test.ts` (all 22 unit tests green across repo).
   - All quality gates green: `typecheck`, `lint`, `test`, `build`.
 - **Next:** Phase 5 (DTR - Daily Time Record).
+- **Blockers:** None.
+
+## Phase 5 Log
+- **Done:**
+  - Expanded `src/lib/date.ts` with timezone-safe Monday-to-Sunday week calculations (`getMondayOfWeek`, `getSundayOfWeek`, `getWeekDates`, `addWeeks`, `formatMinutesTo24H`, `formatDateDisplay`, `formatMonthDisplay`).
+  - Implemented `saveDtrEntryWithSnapshot` in `src/features/dtr/services/dtr-service.ts`: snapshots user's current lunch preferences on new entry creation and preserves original lunch snapshot on updates.
+  - Implemented typed server actions `saveDtrEntryAction` and `deleteDtrEntryAction` with Zod validation, user authentication, and revalidation of `/dtr` and `/dashboard`.
+  - Built interactive `DtrModal` client component with native `<input type="time">`, live worked hours calculation preview (`8:30 AM to 6:30 PM minus 60m lunch = 9h 00m`), and validation.
+  - Built comprehensive `DtrView` with week-by-week pagination (`Previous Week`, `Current Week`, `Next Week`), summary statistics (weekly hours, days logged, daily average, lunch rule), interactive daily breakdown (Monday to Sunday) with inline edit/delete, empty shift quick-logging, and a monthly summary view.
+  - Wired SSR data preloading in `src/app/(app)/dtr/page.tsx` for fast rendering with zero layout shift.
+  - Added pure schema validation tests in `src/features/dtr/lib/dtr-validation.test.ts` and extended pure calculation tests in `src/features/dtr/lib/calc-hours.test.ts` (all 34 tests passing across the workspace).
+  - All quality gates green: `typecheck`, `lint`, `test`, `build`.
+- **Next:** Phase 6 (Budget Tracker).
 - **Blockers:** None.

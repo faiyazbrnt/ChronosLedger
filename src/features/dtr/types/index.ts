@@ -9,7 +9,17 @@ export interface DtrEntryData {
   timeInMinutes: number;
   timeOutMinutes: number;
   lunchMinutesApplied: number;
+  workedMinutes?: number; // Pure derived runtime value
   note: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface DtrWeekSummary {
+  weekStart: string; // YYYY-MM-DD (Monday)
+  weekEnd: string; // YYYY-MM-DD (Sunday)
+  totalWorkedMinutes: number;
+  formattedTotalHours: string;
+  decimalTotalHours: string;
+  daysWorkedCount: number;
 }

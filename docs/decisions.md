@@ -47,3 +47,11 @@ This document tracks non-obvious technical and design choices across development
 ### [FS] Historical DTR Lunch Immutability Enforcement
 - **Context:** If a user modifies their default lunch break duration (e.g. from 60 to 45 minutes), recalculating past DTR entries would alter historical work logs, timesheets, and hours previously approved or tracked.
 - **Decision:** Changes made via `updateSettingsAction` strictly apply only to future DTR entries. All DTR entries permanently store their snapshotted `lunchMinutesApplied` at creation time, preserving audited historical accuracy.
+
+### [FS] Service-Level Lunch Snapshotting without Cross-Feature Boundary Violations
+- **Context:** ESLint mechanical boundary rules strictly prohibit cross-feature dependencies (e.g. `src/features/dtr` importing from `src/features/settings`). However, saving a new DTR shift requires the user's active lunch deduction preference.
+- **Decision:** Implemented `saveDtrEntryWithSnapshot` directly inside `src/features/dtr/services/dtr-service.ts`. Because services have permitted access to `prisma`, it reads `prisma.settings` directly during entry creation to snapshot `lunchMinutesApplied` while preserving existing snapshots on updates, keeping all ESLint boundary rules clean.
+
+### [FE] Timezone-Agnostic String Date Math for Week Intervals
+- **Context:** Standard JavaScript `Date` objects shift calendar dates across timezones when using UTC conversions (e.g. converting `2026-09-21T00:00:00Z` in negative UTC offsets shifts to the previous day).
+- **Decision:** Implemented pure integer calendar arithmetic in `src/lib/date.ts` (`getMondayOfWeek`, `getSundayOfWeek`, `getWeekDates`, `addDays`, `addWeeks`). Calculations parse `YYYY-MM-DD` strings directly into year, month, and day integers, guaranteeing zero date shifts or boundary errors regardless of client timezone.

@@ -60,4 +60,27 @@ describe("DTR calc-hours pure calculations", () => {
     };
     expect(calculateWorkedMinutes(invalid)).toBe(0);
   });
+
+  it("returns 0 and never negative if lunch deduction exceeds shift length", () => {
+    const shortShift = {
+      timeInMinutes: 540, // 9:00 AM
+      timeOutMinutes: 570, // 9:30 AM (30 mins raw)
+      lunchMinutesApplied: 60, // 60 mins lunch
+    };
+    expect(calculateWorkedMinutes(shortShift)).toBe(0);
+  });
+
+  it("formats fractional hours accurately", () => {
+    // 8h 30m = 510 minutes
+    expect(formatWorkedHoursAndMinutes(510)).toBe("8h 30m");
+    expect(formatWorkedDecimalHours(510)).toBe("8.50");
+
+    // 7h 45m = 465 minutes
+    expect(formatWorkedHoursAndMinutes(465)).toBe("7h 45m");
+    expect(formatWorkedDecimalHours(465)).toBe("7.75");
+  });
+
+  it("returns 0 for empty entries list", () => {
+    expect(calculateTotalWorkedMinutes([])).toBe(0);
+  });
 });
