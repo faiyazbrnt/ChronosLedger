@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type MouseEventHandler, useEffect, useState } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { Loader2, type LucideIcon } from "lucide-react";
 
@@ -10,6 +10,7 @@ interface ModuleNavLinkProps {
   icon: LucideIcon;
   isActive: boolean;
   compact?: boolean;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
 const PENDING_DELAY_MS = 150;
@@ -85,10 +86,11 @@ export function ModuleNavLink({
   icon,
   isActive,
   compact = false,
+  onClick,
 }: ModuleNavLinkProps) {
   const activeClasses = compact
-    ? "text-primary"
-    : "bg-primary text-primary-foreground shadow-sm";
+    ? "text-nav-active"
+    : "bg-nav-active text-nav-active-foreground shadow-sm";
   const inactiveClasses = compact
     ? "text-muted-foreground hover:text-foreground"
     : "text-muted-foreground hover:bg-muted/70 hover:text-foreground active:scale-[0.99]";
@@ -104,6 +106,7 @@ export function ModuleNavLink({
     <Link
       href={href}
       prefetch
+      onClick={onClick}
       aria-current={isActive ? "page" : undefined}
       className={className}
     >

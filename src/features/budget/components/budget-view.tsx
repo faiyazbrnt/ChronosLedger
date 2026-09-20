@@ -373,7 +373,7 @@ export function BudgetView({
                 <button
                   type="button"
                   onClick={() => setIsAllowanceModalOpen(true)}
-                  className="text-xs text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
+                  className="text-xs text-link underline underline-offset-2 hover:opacity-80 transition-opacity"
                 >
                   {allowanceMinor > 0 ? "Adjust allowance" : "Set allowance"}
                 </button>
@@ -403,7 +403,7 @@ export function BudgetView({
                 status === "OVER_BUDGET"
                   ? "border-l-destructive"
                   : status === "NEAR_LIMIT"
-                  ? "border-l-amber-500"
+                  ? "border-l-warning"
                   : "border-l-primary"
               }`}
             >
@@ -416,7 +416,7 @@ export function BudgetView({
                     status === "OVER_BUDGET"
                       ? "text-destructive"
                       : status === "NEAR_LIMIT"
-                      ? "text-amber-600 dark:text-amber-400"
+                      ? "text-warning"
                       : "text-foreground"
                   }`}
                 >
@@ -451,7 +451,7 @@ export function BudgetView({
                   {status === "OVER_BUDGET" ? (
                     <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
                   ) : status === "NEAR_LIMIT" ? (
-                    <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+                    <AlertCircle className="h-5 w-5 text-warning shrink-0" />
                   ) : (
                     <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
                   )}
@@ -494,7 +494,7 @@ export function BudgetView({
                     status === "OVER_BUDGET"
                       ? "bg-destructive"
                       : status === "NEAR_LIMIT"
-                      ? "bg-amber-500"
+                      ? "bg-warning"
                       : "bg-primary"
                   }`}
                   style={{ width: `${Math.min(100, Math.max(0, percentUsed))}%` }}

@@ -153,7 +153,7 @@ export function AllowanceModal({
               />
             </div>
             {isValidAmount && parsedMinor !== null && (
-              <div className="flex items-center gap-1.5 text-xs text-primary font-mono font-medium pt-1">
+              <div className="flex items-center gap-1.5 text-xs text-link font-mono font-medium pt-1">
                 <Sparkles className="h-3.5 w-3.5" />
                 <span>Formatted: {formatMinorUnits(parsedMinor, currency)}</span>
               </div>

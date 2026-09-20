@@ -4,32 +4,45 @@
 
 /*
   Design System Mapping:
-  - Light mode surface/background: #FFEFCC
-  - Light mode accent/action (buttons, links, active nav): #660000 (11:1 contrast on #FFEFCC)
-  - Card, secondary, muted, border derived via color-mix() from #FFEFCC and #660000.
+  - Light mode canvas: #F4F6F8; surfaces: #FFFFFF.
+  - Primary text/borders: #263238; active metrics: #37474F.
+  - Success/growth: #00BFA5; temporal and alert states: #FF5722.
   - Dark mode: Strictly black and white (#000000 surface, #ffffff accent/foreground, neutral borders).
 */
 
 :root {
-  --background: #ffefcc;
-  --foreground: color-mix(in srgb, #660000 90%, black);
-  --card: color-mix(in srgb, #ffefcc 92%, #660000 8%);
-  --card-foreground: color-mix(in srgb, #660000 90%, black);
-  --popover: color-mix(in srgb, #ffefcc 92%, #660000 8%);
-  --popover-foreground: color-mix(in srgb, #660000 90%, black);
-  --primary: #660000;
-  --primary-foreground: #ffefcc;
-  --secondary: color-mix(in srgb, #ffefcc 82%, #660000 18%);
-  --secondary-foreground: #660000;
-  --muted: color-mix(in srgb, #ffefcc 82%, #660000 18%);
-  --muted-foreground: color-mix(in srgb, #660000 70%, #ffefcc 30%);
-  --accent: color-mix(in srgb, #ffefcc 76%, #660000 24%);
-  --accent-foreground: #660000;
-  --destructive: #b91c1c;
-  --destructive-foreground: #ffffff;
-  --border: color-mix(in srgb, #660000 22%, #ffefcc 78%);
-  --input: color-mix(in srgb, #660000 22%, #ffefcc 78%);
-  --ring: #660000;
+  --background: #f4f6f8;
+  --foreground: #263238;
+  --card: #ffffff;
+  --card-foreground: #263238;
+  --popover: #ffffff;
+  --popover-foreground: #263238;
+  --primary: #37474f;
+  --primary-foreground: #ffffff;
+  --secondary: #eceff1;
+  --secondary-foreground: #263238;
+  --muted: #eceff1;
+  --muted-foreground: #546e7a;
+  --accent: #eceff1;
+  --accent-foreground: #263238;
+  --destructive: #ff5722;
+  --destructive-foreground: #102027;
+  --success: #00bfa5;
+  --success-foreground: #102027;
+  --warning: #ff5722;
+  --border: #263238;
+  --input: #b0bec5;
+  --ring: #37474f;
+  --link: #37474f;
+  --nav-active: #37474f;
+  --nav-active-foreground: #ffffff;
+  --chart-food: #00bfa5;
+  --chart-transport: #37474f;
+  --chart-bills: #ff5722;
+  --chart-shopping: #546e7a;
+  --chart-health: #00a38c;
+  --chart-entertainment: #78909c;
+  --chart-other: #b0bec5;
   --radius: 0.75rem;
 }
 
@@ -50,9 +63,22 @@
   --accent-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
+  --success: #34d399;
+  --success-foreground: #000000;
+  --warning: #f59e0b;
   --border: #27272a;
   --input: #27272a;
   --ring: #ffffff;
+  --link: #ffffff;
+  --nav-active: #ffffff;
+  --nav-active-foreground: #000000;
+  --chart-food: #ff9f1c;
+  --chart-transport: #60a5fa;
+  --chart-bills: #fb923c;
+  --chart-shopping: #38bdf8;
+  --chart-health: #5eead4;
+  --chart-entertainment: #c4b5fd;
+  --chart-other: #cbd5e1;
 }
 
 @theme inline {
@@ -72,9 +98,15 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-link: var(--link);
+  --color-nav-active: var(--nav-active);
+  --color-nav-active-foreground: var(--nav-active-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

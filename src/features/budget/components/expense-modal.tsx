@@ -221,7 +221,7 @@ export function ExpenseModal({
               />
             </div>
             {isValidAmount && (
-              <span className="text-xs text-primary font-mono font-medium block">
+              <span className="text-xs text-link font-mono font-medium block">
                 Formatted: {formatMinorUnits(parsedMinor, currency)}
               </span>
             )}

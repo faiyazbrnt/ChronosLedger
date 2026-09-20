@@ -3,11 +3,10 @@
 import React from "react";
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
+  PieChart,
+  Pie,
   Tooltip,
+  Legend,
   Cell,
 } from "recharts";
 import { formatMinorUnits } from "@/lib/money";
@@ -17,14 +16,22 @@ const CATEGORY_META: Record<
   ExpenseCategory,
   { label: string; color: string }
 > = {
-  FOOD: { label: "Food", color: "#f97316" },
-  TRANSPORT: { label: "Transport", color: "#3b82f6" },
-  BILLS: { label: "Bills", color: "#ef4444" },
-  SHOPPING: { label: "Shopping", color: "#ec4899" },
-  HEALTH: { label: "Health", color: "#10b981" },
-  ENTERTAINMENT: { label: "Entertainment", color: "#8b5cf6" },
-  OTHER: { label: "Other", color: "#6b7280" },
+  FOOD: { label: "Food", color: "var(--chart-food)" },
+  TRANSPORT: { label: "Transport", color: "var(--chart-transport)" },
+  BILLS: { label: "Bills", color: "var(--chart-bills)" },
+  SHOPPING: { label: "Shopping", color: "var(--chart-shopping)" },
+  HEALTH: { label: "Health", color: "var(--chart-health)" },
+  ENTERTAINMENT: { label: "Entertainment", color: "var(--chart-entertainment)" },
+  OTHER: { label: "Other", color: "var(--chart-other)" },
 };
+
+interface CategoryChartDatum {
+  category: ExpenseCategory;
+  label: string;
+  amount: number;
+  percent: number;
+  color: string;
+}
 
 interface CategoryChartProps {
   categoryTotals: Record<string, number>;
@@ -54,7 +61,6 @@ export function CategoryChart({
         category: cat,
         label: CATEGORY_META[cat].label,
         amount,
-        amountMajor: amount / 100,
         percent,
         color: CATEGORY_META[cat].color,
       };
@@ -64,76 +70,53 @@ export function CategoryChart({
 
   return (
     <div className="space-y-6">
-      {/* Recharts Bar Chart */}
-      <div className="h-64 w-full">
+      <div className="h-72 w-full sm:h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <XAxis type="number" hide />
-            <YAxis
-              type="category"
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              width={100}
-              tick={{ fill: "currentColor", fontSize: 12 }}
-            />
+          <PieChart>
             <Tooltip
-              formatter={(val) => [
-                formatMinorUnits(Math.round(Number(val ?? 0) * 100), currency),
-                "Spent",
-              ]}
-              contentStyle={{
-                backgroundColor: "var(--card)",
-                borderColor: "var(--border)",
-                borderRadius: "0.75rem",
-                color: "var(--foreground)",
-                fontSize: "12px",
+              content={({ active, payload }) => {
+                const item = payload?.[0]?.payload as CategoryChartDatum | undefined;
+
+                if (!active || !item) return null;
+
+                return (
+                  <div className="rounded-xl border border-border bg-card p-3 text-xs text-foreground shadow-lg">
+                    <p className="font-semibold">{item.label}</p>
+                    <p className="mt-1 font-mono font-bold">
+                      {formatMinorUnits(item.amount, currency)}
+                    </p>
+                    <p className="mt-0.5 text-muted-foreground">
+                      {item.percent.toFixed(1)}% of spending
+                    </p>
+                  </div>
+                );
               }}
             />
-            <Bar dataKey="amountMajor" radius={[0, 8, 8, 0]}>
+            <Legend
+              verticalAlign="bottom"
+              iconType="circle"
+              formatter={(value) => (
+                <span className="text-xs font-medium text-foreground">{value}</span>
+              )}
+            />
+            <Pie
+              data={data}
+              dataKey="amount"
+              nameKey="label"
+              cx="50%"
+              cy="46%"
+              innerRadius="45%"
+              outerRadius="72%"
+              paddingAngle={2}
+              stroke="var(--card)"
+              strokeWidth={2}
+            >
               {data.map((entry) => (
                 <Cell key={`cell-${entry.category}`} fill={entry.color} />
               ))}
-            </Bar>
-          </BarChart>
+            </Pie>
+          </PieChart>
         </ResponsiveContainer>
-      </div>
-
-      {/* Category Progress Meters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-        {data.map((item) => (
-          <div
-            key={item.category}
-            className="p-3 rounded-xl border border-border bg-card/60 space-y-2"
-          >
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 font-semibold text-foreground">
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span>{item.label}</span>
-              </div>
-              <span className="font-mono font-bold text-foreground">
-                {formatMinorUnits(item.amount, currency)}
-              </span>
-            </div>
-
-            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
-              <div
-                className="h-2 rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.min(100, item.percent)}%`,
-                  backgroundColor: item.color,
-                }}
-              />
-            </div>
-
-            <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-              <span>{item.percent.toFixed(1)}% of spending</span>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
