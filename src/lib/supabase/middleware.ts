@@ -85,5 +85,28 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  return supabaseResponse;
+  // Forward verified user identity to downstream Server Components in request headers
+  // to avoid redundant remote Supabase auth network calls on every navigation
+  const requestHeaders = new Headers(request.headers);
+  if (user) {
+    requestHeaders.set("x-user-id", user.id);
+    if (user.email) {
+      requestHeaders.set("x-user-email", user.email);
+    }
+  } else {
+    requestHeaders.delete("x-user-id");
+    requestHeaders.delete("x-user-email");
+  }
+
+  const finalResponse = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    finalResponse.cookies.set(cookie.name, cookie.value, cookie);
+  });
+
+  return finalResponse;
 }

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/server";
 import {
   getTodayDateString,
   getMondayOfWeek,
@@ -16,10 +16,7 @@ interface DtrPageProps {
 }
 
 export default async function DtrPage({ searchParams }: DtrPageProps) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   if (!user) {
     redirect("/login");
@@ -33,18 +30,18 @@ export default async function DtrPage({ searchParams }: DtrPageProps) {
       ? getMondayOfWeek(weekParam)
       : getMondayOfWeek(todayStr);
 
-  // Preload settings
-  const settings = await getUserSettings(user.id);
-
-  // Preload entries around the active week (spanning 4 weeks before and after for smooth navigation)
+  // Preload settings and entries in parallel (spanning 4 weeks before and after for smooth navigation)
   const rangeStart = parseISODate(addWeeks(activeMonday, -4));
   const rangeEnd = parseISODate(addWeeks(activeMonday, 5));
 
-  const rawEntries = await getDtrEntriesForWeek({
-    userId: user.id,
-    startDate: rangeStart,
-    endDate: rangeEnd,
-  });
+  const [settings, rawEntries] = await Promise.all([
+    getUserSettings(user.id),
+    getDtrEntriesForWeek({
+      userId: user.id,
+      startDate: rangeStart,
+      endDate: rangeEnd,
+    }),
+  ]);
 
   const serializedEntries: DtrEntryData[] = rawEntries.map((e) => ({
     id: e.id,

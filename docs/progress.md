@@ -157,6 +157,15 @@
     - Removed tagline/subtitle text ("DTR & Budget Tracker") from the top-left sidebar header.
     - Vertically centered "ChronosLedger" directly with the adjacent logo icon.
   - Updated HTML document and browser tab title to "ChronosLedger".
+  - Fixed module navigation latency bug:
+    - Added `src/app/(app)/loading.tsx` instant loading skeleton boundary to eliminate client-side route freeze.
+    - Forwarded user headers in `middleware.ts` and added `getAuthUser()` in `src/lib/supabase/server.ts`, eliminating duplicate remote `getUser()` HTTPS calls.
+    - Parallelized database queries using `Promise.all` in `budget/page.tsx` and `dtr/page.tsx`.
+  - Implemented Lighthouse 80+ / Core Web Vitals optimizations:
+    - Code-split Recharts via `next/dynamic` and decoupled from `budget/index.ts`, reducing `/budget` page chunk from 118 kB to 10.7 kB (91% reduction).
+    - Added `display: "swap"` to Google Geist fonts in `layout.tsx` to eliminate FOIT and optimize FCP/LCP.
+    - Configured `SystemLogo` to serve dimension-scaled PNGs (12 kB `logo-64.png` instead of 152 kB `logo.png`).
+    - Configured Gzip/Brotli compression and stripped powered-by header in `next.config.ts`.
   - All quality gates 100% green: `bun run typecheck`, `bun run lint`, `bun test`, `bun run build`.
 - **Status:** Complete.
 

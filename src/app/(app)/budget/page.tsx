@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/server";
 import {
   getTodayDateString,
   getMondayOfWeek,
@@ -22,10 +22,7 @@ interface BudgetPageProps {
 }
 
 export default async function BudgetPage({ searchParams }: BudgetPageProps) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
 
   if (!user) {
     redirect("/login");
@@ -39,16 +36,25 @@ export default async function BudgetPage({ searchParams }: BudgetPageProps) {
       ? getMondayOfWeek(weekParam)
       : getMondayOfWeek(todayStr);
 
-  // Preload user settings for currency preference
-  const settings = await getUserSettings(user.id);
-  const currency = settings?.currency ?? "PHP";
-
-  // Preload weekly allowance (with historical fallback if not set)
   const mondayDate = parseISODate(activeMonday);
-  const rawAllowance = await getWeeklyAllowance({
-    userId: user.id,
-    weekStart: mondayDate,
-  });
+  const rangeStart = parseISODate(addWeeks(activeMonday, -4));
+  const rangeEnd = parseISODate(addWeeks(activeMonday, 5));
+
+  // Preload settings, allowance, and expenses in parallel
+  const [settings, rawAllowance, rawExpenses] = await Promise.all([
+    getUserSettings(user.id),
+    getWeeklyAllowance({
+      userId: user.id,
+      weekStart: mondayDate,
+    }),
+    getExpensesForRange({
+      userId: user.id,
+      startDate: rangeStart,
+      endDate: rangeEnd,
+    }),
+  ]);
+
+  const currency = settings?.currency ?? "PHP";
 
   const serializedAllowance: WeeklyAllowanceData | null = rawAllowance
     ? {
@@ -59,16 +65,6 @@ export default async function BudgetPage({ searchParams }: BudgetPageProps) {
         isInherited: rawAllowance.isInherited,
       }
     : null;
-
-  // Preload expenses around the active week (spanning 4 weeks before and after for smooth navigation)
-  const rangeStart = parseISODate(addWeeks(activeMonday, -4));
-  const rangeEnd = parseISODate(addWeeks(activeMonday, 5));
-
-  const rawExpenses = await getExpensesForRange({
-    userId: user.id,
-    startDate: rangeStart,
-    endDate: rangeEnd,
-  });
 
   const serializedExpenses: ExpenseData[] = rawExpenses.map((e) => ({
     id: e.id,
