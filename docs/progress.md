@@ -222,5 +222,20 @@
 - **Done:** Added `hideTitle` prop to `Brand` component for cleanly centering the logo icon when collapsed.
 - **Verification:** `bun run typecheck`, `bun run lint`, and `bun test` (57 passing) all pass.
 
+---
+
+## Realtime Notifications & Popover Positioning Fix
+- **Done:**
+  - **Bug 1 (Layout/Positioning):** Converted centered modal dialog into an anchored dropdown popover positioned directly under the header bell trigger (`absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-96 z-50`).
+  - Added a responsive screen-dimming backdrop (`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-[1px]`) that dismisses the popover when clicked.
+  - Implemented keyboard accessibility: <kbd>Escape</kbd> dismissal with focus restoration to the bell button, and focus cycle trapping within the open panel.
+  - **Bug 2 (Realtime):** Enabled initial fetch on component mount so the bell badge renders immediately upon loading any dashboard route.
+  - Connected Supabase Realtime channel (`postgres_changes` on `notifications` table filtered by `userId`) for instant push updates (<50ms) on `INSERT`, `UPDATE`, and `DELETE`.
+  - Configured PostgreSQL `supabase_realtime` publication and `REPLICA IDENTITY FULL` on the `notifications` table.
+  - Added window focus/visibility change re-sync and a 60-second polling heartbeat fallback for network resiliency.
+  - Added pure notification utilities and unit tests in `src/features/notifications/lib/notification-utils.test.ts` (unread badge cap `"10+"`, date grouping, sorting, filtering).
+- **Verification:** All 66 unit tests pass (`bun test`), `tsc --noEmit` zero errors, ESLint zero errors/warnings, and Next.js production build passes cleanly.
+- **Blockers:** None.
+
 
 

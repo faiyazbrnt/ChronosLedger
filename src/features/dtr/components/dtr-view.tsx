@@ -41,6 +41,7 @@ import {
   formatWorkedDecimalHours,
 } from "../lib/calc-hours";
 import { deleteDtrEntryAction } from "../actions/dtr-actions";
+import { notifyActivityChanged } from "@/lib/activity-client";
 import { DtrModal } from "./dtr-modal";
 import type { DtrEntryData } from "../types";
 
@@ -156,6 +157,7 @@ export function DtrView({
         return;
       }
       setEntries((prev) => prev.filter((e) => e.id !== id));
+      notifyActivityChanged();
       notify.success("Shift deleted");
     });
   };
