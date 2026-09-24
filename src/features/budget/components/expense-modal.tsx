@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { getTodayDateString, formatDateDisplay } from "@/lib/date";
 import { formatMinorUnits, parseMajorToMinor } from "@/lib/money";
 import { createExpenseAction, updateExpenseAction } from "../actions/budget-actions";
+import { notifyActivityChanged } from "@/lib/activity-client";
 import { expenseCategories } from "../schemas";
 import type { ExpenseCategory, ExpenseData } from "../types";
 
@@ -146,6 +147,7 @@ export function ExpenseModal({
         }
       }
 
+      notifyActivityChanged();
       onClose();
     });
   };

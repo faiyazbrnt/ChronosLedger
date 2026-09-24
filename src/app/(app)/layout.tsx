@@ -8,7 +8,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getAuthUser();
   return (
     <ToastProvider><ConfirmDialogProvider><AppShell
-      headerActions={<NotificationsMenu />}
+      headerActions={<NotificationsMenu userId={user?.id} />}
       userSlot={
         <AccountMenu email={user?.email ?? "Account"} />
       }

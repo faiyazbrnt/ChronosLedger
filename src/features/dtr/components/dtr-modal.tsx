@@ -18,6 +18,7 @@ import {
   formatWorkedDecimalHours,
 } from "../lib/calc-hours";
 import { saveDtrEntryAction } from "../actions/dtr-actions";
+import { notifyActivityChanged } from "@/lib/activity-client";
 import type { DtrEntryData } from "../types";
 
 interface DtrModalProps {
@@ -124,6 +125,7 @@ export function DtrModal({
       if (response.data && onEntrySaved) {
         onEntrySaved(response.data);
       }
+      notifyActivityChanged();
       onClose();
     });
   };

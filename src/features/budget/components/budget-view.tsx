@@ -52,6 +52,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useConfirm } from "@/components/ui";
 import { useNotify } from "@/components/ui";
 import { deleteExpenseAction } from "../actions/budget-actions";
+import { notifyActivityChanged } from "@/lib/activity-client";
 import { ExpenseModal } from "./expense-modal";
 import { AllowanceModal } from "./allowance-modal";
 
@@ -231,6 +232,7 @@ export function BudgetView({
         return;
       }
       setExpenses((prev) => prev.filter((e) => e.id !== id));
+      notifyActivityChanged();
       notify.success("Expense deleted");
     });
   };
