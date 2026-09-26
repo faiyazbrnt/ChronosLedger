@@ -5,8 +5,12 @@ export function createNotification(userId: string, message: string, type: string
   return prisma.notification.create({ data: { userId, message, type } });
 }
 
-export function getNotifications(userId: string) {
-  return prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: "desc" } });
+export function getNotifications(userId: string, limit = 50) {
+  return prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
 }
 
 export function markNotificationRead(userId: string, id: string) {

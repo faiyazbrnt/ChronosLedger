@@ -130,7 +130,7 @@ Create a `.env` file in the root directory:
 ```env
 # Database Connections (Supabase)
 # Transaction pooler (Port 6543) for runtime queries:
-DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
+DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=10&pool_timeout=30"
 # Direct connection (Port 5432) for Prisma migrations:
 DIRECT_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
 

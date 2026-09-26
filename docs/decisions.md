@@ -176,6 +176,19 @@ This document tracks non-obvious technical and design choices across development
   4. Dispatched `recordActivity` non-blocking in the background and optimized break synchronization to skip `deleteMany`/`createMany` if breaks were unchanged.
   5. Adjusted background notification heartbeat polling from 4s to 30s, relying on instant Supabase Realtime and client CustomEvents for real-time synchronization.
 
+### [FS] Serverless Connection Pool Starvation & P2024 Fix (Vercel + Supabase Supavisor)
+- **Context:** On Vercel deployments, opening `/calendar` or `/dashboard` intermittently threw `PrismaClientKnownRequestError [P2024]: Timed out fetching a new connection from the connection pool (Current connection pool timeout: 10, connection limit: 1)`.
+- **Root Cause:**
+  1. A common recommendation for serverless environments advises setting `connection_limit=1`. In Next.js App Router, layout components, pages, client-invoked Server Actions (e.g. `NotificationsMenu` calling `getNotificationsAction` on mount), and prefetching fire concurrent queries (`Promise.all`).
+  2. With `connection_limit=1`, Prisma's local pool permits only 1 query at a time, serializing all queries into a queue. If cumulative execution and network latency exceed 10s (`pool_timeout: 10`), queued queries abort with `P2024`.
+  3. Supabase's transaction pooler (Supavisor on port `6543`) handles multiplexing at the server level, meaning client instances can safely allocate `connection_limit=10`.
+- **Decision:**
+  1. Implemented runtime URL optimization in `src/lib/prisma.ts`: automatically intercepts `connection_limit=1` or `connection_limit=2` and promotes it to `connection_limit=10`, while ensuring `pool_timeout=30` is always present.
+  2. Hardened `getNotificationsAction` and notification mutations in `src/features/notifications/actions/` with try/catch to avoid unhandled 500 exceptions on pages during network or pool transients.
+  3. Added `take: 50` limit on `getNotifications` in `notification-service.ts`.
+  4. Updated documentation (`.env.example`, `README.md`) instructing deployments to use `?pgbouncer=true&connection_limit=10&pool_timeout=30`.
+
+
 
 
 
