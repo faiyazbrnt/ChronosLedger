@@ -11,7 +11,7 @@ export function calculateRemaining(
 }
 
 /**
- * "Safe to spend per day" = remaining ÷ days left in the week (minimum 1 day, never negative).
+ * "Safe to spend per day" = remaining ÷ days left in the cycle (minimum 1 day, never negative).
  */
 export function calculateSafeToSpendPerDay(
   remainingMinor: number,
@@ -34,3 +34,5 @@ export function calculateCategoryTotals(
   }
   return totals;
 }
+
+export { getCyclePeriod } from "@/lib/cycle";

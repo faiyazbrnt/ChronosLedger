@@ -7,6 +7,8 @@ export type ExpenseCategory =
   | "ENTERTAINMENT"
   | "OTHER";
 
+export type BudgetCycleType = "WEEKLY" | "MONTHLY" | "SEMI_MONTHLY";
+
 export type BudgetHealthStatus = "ON_TRACK" | "NEAR_LIMIT" | "OVER_BUDGET";
 
 export type BudgetActionResponse<T = void> =
@@ -32,6 +34,24 @@ export interface WeeklyAllowanceData {
   isInherited?: boolean; // True if carried over from previous week
 }
 
+export interface BudgetConfigData {
+  id: string;
+  userId: string;
+  cycleType: BudgetCycleType;
+  amountMinor: number;
+  anchorDate?: string | null; // YYYY-MM-DD
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CyclePeriod {
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  daysRemaining: number;
+  totalDays: number;
+  displayLabel: string;
+}
+
 export interface BudgetSummaryData {
   allowanceMinor: number;
   totalSpentMinor: number;
@@ -41,4 +61,6 @@ export interface BudgetSummaryData {
   status: BudgetHealthStatus;
   categoryTotals: Record<string, number>;
   currency: string;
+  cycleType?: BudgetCycleType;
+  cyclePeriod?: CyclePeriod;
 }

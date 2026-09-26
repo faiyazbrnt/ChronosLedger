@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Clock,
   Wallet,
-  Settings,
   Menu,
   X,
   CalendarDays,
@@ -43,11 +42,6 @@ const navItems = [
     name: "Calendar",
     href: "/calendar",
     icon: CalendarDays,
-  },
-  {
-    name: "Settings",
-    href: "/settings",
-    icon: Settings,
   },
 ];
 

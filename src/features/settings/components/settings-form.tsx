@@ -1,31 +1,15 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import {
-  Utensils,
-  Coins,
-  Save,
-  Info,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  Sparkles,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Coins, Sparkles, CheckCircle2, AlertCircle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMinorUnits } from "@/lib/money";
 import { updateSettingsAction } from "../actions/settings-actions";
 import type { UserSettingsData } from "../types";
 
-const LUNCH_PRESETS = [15, 30, 45, 60, 90];
 const CURRENCY_PRESETS = [
   { code: "PHP", label: "PHP (₱)", symbol: "₱" },
   { code: "USD", label: "USD ($)", symbol: "$" },
@@ -42,12 +26,6 @@ interface SettingsFormProps {
 }
 
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
-  const [lunchEnabled, setLunchEnabled] = useState(
-    initialSettings?.lunchDeductionEnabled ?? true
-  );
-  const [lunchMinutes, setLunchMinutes] = useState(
-    initialSettings?.lunchBreakMinutes ?? 60
-  );
   const [currency, setCurrency] = useState(
     initialSettings?.currency?.toUpperCase() ?? "PHP"
   );
@@ -84,15 +62,8 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       return;
     }
 
-    if (lunchMinutes < 0 || lunchMinutes > 240) {
-      setErrorMessage("Lunch break duration must be between 0 and 240 minutes.");
-      return;
-    }
-
     startTransition(async () => {
       const response = await updateSettingsAction({
-        lunchDeductionEnabled: lunchEnabled,
-        lunchBreakMinutes: Number(lunchMinutes),
         currency: code,
       });
 
@@ -118,7 +89,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
           </Badge>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-          Configure default lunch break deductions and currency formatting for your daily logs.
+          Configure currency formatting for your budgets and expense calculations.
         </p>
       </div>
 
@@ -146,105 +117,6 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       )}
 
       <div className="space-y-6">
-        {/* Lunch Deduction Setting Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
-                <Utensils className="h-4 w-4" />
-              </div>
-              <div>
-                <CardTitle className="text-base font-bold">Lunch Break Deduction</CardTitle>
-                <CardDescription>
-                  Automatically deduct meal time from all newly logged daily shifts.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-5 pt-2">
-            {/* Toggle Switch */}
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card/60">
-              <div className="pr-4">
-                <p className="text-sm font-semibold text-foreground">Enable Lunch Deduction</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  When active, lunch minutes are applied to every newly recorded work entry.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setLunchEnabled(!lunchEnabled);
-                  setSuccessMessage(null);
-                }}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  lunchEnabled ? "bg-primary" : "bg-muted"
-                }`}
-                role="switch"
-                aria-checked={lunchEnabled}
-                aria-label="Toggle lunch deduction"
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg ring-0 transition-transform ${
-                    lunchEnabled ? "translate-x-5" : "translate-x-0"
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Duration Input & Presets */}
-            {lunchEnabled && (
-              <div className="space-y-3 pt-1">
-                <label
-                  htmlFor="lunch-minutes"
-                  className="block text-xs font-semibold text-foreground"
-                >
-                  Lunch Duration (Minutes)
-                </label>
-                <div className="flex flex-wrap items-center gap-2">
-                  {LUNCH_PRESETS.map((preset) => {
-                    const isSelected = lunchMinutes === preset;
-                    return (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => {
-                          setLunchMinutes(preset);
-                          setSuccessMessage(null);
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-                          isSelected
-                            ? "bg-primary text-primary-foreground border-primary shadow-xs"
-                            : "bg-card text-foreground border-border hover:bg-muted"
-                        }`}
-                      >
-                        {preset}m {preset === 60 ? "(Default)" : ""}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="pt-1 w-full sm:w-48">
-                  <Input
-                    id="lunch-minutes"
-                    type="number"
-                    min={0}
-                    max={240}
-                    value={lunchMinutes}
-                    onChange={(e) => {
-                      setLunchMinutes(Number(e.target.value));
-                      setSuccessMessage(null);
-                    }}
-                    className="font-mono text-sm"
-                  />
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Allowable range: 0 to 240 minutes.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Currency Setting Card */}
         <Card>
           <CardHeader>
@@ -347,17 +219,6 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
             </div>
           </CardContent>
         </Card>
-
-        {/* Audited Snapshot Guarantee Card */}
-        <div className="flex items-start gap-3 rounded-2xl border border-border bg-card/60 p-4 text-xs text-muted-foreground shadow-xs">
-          <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-          <div className="leading-relaxed">
-            <span className="font-semibold text-foreground">Audited Snapshot Guarantee:</span>{" "}
-            Updating your lunch preferences will strictly affect <strong>future</strong> DTR records.
-            Existing time logs permanently retain the exact lunch deduction captured at the moment
-            they were logged.
-          </div>
-        </div>
 
         {/* Action Button */}
         <div className="pt-2">

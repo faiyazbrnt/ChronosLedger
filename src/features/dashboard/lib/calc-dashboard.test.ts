@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   calculateWeeklyDtrSummary,
   calculateWeeklyBudgetSummary,
+  calculateRenderedHoursSummary,
 } from "./calc-dashboard";
 
 describe("Dashboard pure calculations", () => {
@@ -101,6 +102,81 @@ describe("Dashboard pure calculations", () => {
       expect(summary.remainingMinor).toBe(-2000);
       expect(summary.percentUsed).toBe(100);
       expect(summary.safeToSpendPerDayMinor).toBe(0);
+    });
+  });
+
+  describe("calculateRenderedHoursSummary", () => {
+    it("accumulates running total across multiple shifts with manual breaks", () => {
+      const entries = [
+        {
+          timeInMinutes: 480, // 8:00 AM
+          timeOutMinutes: 1020, // 5:00 PM (540m raw)
+          lunchMinutesApplied: 0,
+          breaks: [{ durationMinutes: 60 }], // 480m net = 8h
+        },
+        {
+          timeInMinutes: 480, // 8:00 AM
+          timeOutMinutes: 1020, // 5:00 PM (540m raw)
+          lunchMinutesApplied: 0,
+          breaks: [{ durationMinutes: 30 }, { durationMinutes: 30 }], // 480m net = 8h
+        },
+      ];
+
+      const summary = calculateRenderedHoursSummary(entries, 300);
+      expect(summary.totalWorkedMinutes).toBe(960); // 16h
+      expect(summary.formattedTotalHours).toBe("16h 00m");
+      expect(summary.decimalTotalHours).toBe("16.00");
+      expect(summary.targetHours).toBe(300);
+      expect(summary.hasTarget).toBe(true);
+      expect(summary.percentTarget).toBe(5); // (16 / 300) * 100 = 5.33 -> 5%
+    });
+
+    it("respects historical shifts with lunchMinutesApplied snapshot", () => {
+      const entries = [
+        {
+          timeInMinutes: 540, // 9:00 AM
+          timeOutMinutes: 1080, // 6:00 PM (540m raw)
+          lunchMinutesApplied: 60, // 480m net = 8h
+        },
+      ];
+
+      const summary = calculateRenderedHoursSummary(entries, 300);
+      expect(summary.totalWorkedMinutes).toBe(480);
+      expect(summary.formattedTotalHours).toBe("8h 00m");
+    });
+
+    it("safely ignores in-progress shifts with timeOutMinutes null", () => {
+      const entries = [
+        {
+          timeInMinutes: 480,
+          timeOutMinutes: null,
+          lunchMinutesApplied: 0,
+        },
+        {
+          timeInMinutes: 480,
+          timeOutMinutes: 960, // 8h
+          lunchMinutesApplied: 0,
+        },
+      ];
+
+      const summary = calculateRenderedHoursSummary(entries, 300);
+      expect(summary.totalWorkedMinutes).toBe(480);
+      expect(summary.formattedTotalHours).toBe("8h 00m");
+    });
+
+    it("handles unset target hours gracefully", () => {
+      const entries = [
+        {
+          timeInMinutes: 480,
+          timeOutMinutes: 960,
+          lunchMinutesApplied: 0,
+        },
+      ];
+
+      const summary = calculateRenderedHoursSummary(entries, null);
+      expect(summary.totalWorkedMinutes).toBe(480);
+      expect(summary.hasTarget).toBe(false);
+      expect(summary.percentTarget).toBe(0);
     });
   });
 });

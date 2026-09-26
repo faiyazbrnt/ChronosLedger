@@ -50,16 +50,29 @@ export default async function DtrPage({ searchParams }: DtrPageProps) {
     timeInMinutes: e.timeInMinutes,
     timeOutMinutes: e.timeOutMinutes,
     lunchMinutesApplied: e.lunchMinutesApplied,
+    breaks: e.breaks?.map((b) => ({
+      id: b.id,
+      category: b.category,
+      durationMinutes: b.durationMinutes,
+    })),
     note: e.note,
+    activity: e.activity,
+    activityDescription: e.activityDescription,
+    remarks: e.remarks,
     createdAt: e.createdAt,
     updatedAt: e.updatedAt,
   }));
+
+  const hasRenderedHoursTarget = Boolean(
+    settings?.renderedHoursTarget && settings.renderedHoursTarget > 0
+  );
 
   return (
     <DtrView
       initialEntries={serializedEntries}
       initialSettings={settings}
       initialWeekMonday={activeMonday}
+      hasRenderedHoursTarget={hasRenderedHoursTarget}
     />
   );
 }

@@ -20,16 +20,26 @@ enum ExpenseCategory {
   OTHER
 }
 
+enum BudgetCycleType {
+  WEEKLY
+  MONTHLY
+  SEMI_MONTHLY
+}
+
 model Profile {
   id         String     @id @db.Uuid // Matches auth.users.id
   email      String     @unique
+  name       String?
+  avatar     String?    @db.Text
   verifiedAt DateTime?
   createdAt  DateTime   @default(now())
 
-  settings   Settings?
-  dtrEntries DtrEntry[]
-  expenses   Expense[]
-  allowances WeeklyAllowance[]
+  settings     Settings?
+  budgetConfig BudgetConfig?
+  dtrEntries   DtrEntry[]
+  dtrBreaks    DtrBreakEntry[]
+  expenses     Expense[]
+  allowances   WeeklyAllowance[]
   notifications Notification[]
 
   @@map("profiles")
@@ -50,13 +60,12 @@ model Notification {
 }
 
 model Settings {
-  id                    String   @id @default(uuid()) @db.Uuid
-  userId                String   @unique @db.Uuid
-  lunchDeductionEnabled Boolean  @default(true)
-  lunchBreakMinutes     Int      @default(60)
-  currency              String   @default("PHP")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                  String   @id @default(uuid()) @db.Uuid
+  userId              String   @unique @db.Uuid
+  currency            String   @default("PHP")
+  renderedHoursTarget Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -68,17 +77,38 @@ model DtrEntry {
   userId              String   @db.Uuid
   workDate            DateTime @db.Date
   timeInMinutes       Int
-  timeOutMinutes      Int
-  lunchMinutesApplied Int
+  timeOutMinutes      Int?
+  lunchMinutesApplied Int      @default(0) // Preserved for historical snapshot immutability
   note                String?
+  activity            String?  @db.Text
+  activityDescription String?  @db.Text
+  remarks             String?  @db.Text
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  breaks   DtrBreakEntry[]
+  user     Profile         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, workDate])
   @@index([userId, workDate])
   @@map("dtr_entries")
+}
+
+model DtrBreakEntry {
+  id              String   @id @default(uuid()) @db.Uuid
+  dtrEntryId      String   @db.Uuid
+  userId          String   @db.Uuid
+  category        String
+  durationMinutes Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  dtrEntry DtrEntry @relation(fields: [dtrEntryId], references: [id], onDelete: Cascade)
+  user     Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([dtrEntryId])
+  @@index([userId])
+  @@map("dtr_break_entries")
 }
 
 model Expense {
@@ -95,6 +125,20 @@ model Expense {
 
   @@index([userId, spentOn])
   @@map("expenses")
+}
+
+model BudgetConfig {
+  id          String          @id @default(uuid()) @db.Uuid
+  userId      String          @unique @db.Uuid
+  cycleType   BudgetCycleType @default(WEEKLY)
+  amountMinor Int             @default(0)
+  anchorDate  DateTime?       @db.Date
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("budget_configs")
 }
 
 model WeeklyAllowance {

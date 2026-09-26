@@ -36,7 +36,18 @@ export const allowanceSchema = z.object({
   amountMinor: z.number().int().min(0, "Allowance cannot be negative"),
 });
 
+export const budgetCycleSchema = z.object({
+  cycleType: z.enum(["WEEKLY", "MONTHLY", "SEMI_MONTHLY"]),
+  amountMinor: z.number().int().min(0, "Budget cannot be negative"),
+  anchorDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid anchor date (YYYY-MM-DD)")
+    .optional()
+    .nullable(),
+});
+
 export type ExpenseInput = z.infer<typeof expenseSchema>;
 export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
 export type DeleteExpenseInput = z.infer<typeof deleteExpenseSchema>;
 export type AllowanceInput = z.infer<typeof allowanceSchema>;
+export type BudgetCycleInput = z.infer<typeof budgetCycleSchema>;

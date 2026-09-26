@@ -132,7 +132,49 @@ This document tracks non-obvious technical and design choices across development
   2. Implemented smooth CSS width transitions (`md:w-64` ⟷ `md:w-[72px]`) synchronized with content padding (`md:pl-64` ⟷ `md:pl-[72px]`).
   3. Added `collapsed` mode to `ModuleNavLink` with centered icon dimensions (`h-11 w-11`), `sr-only` labels, and native browser tooltips (`title={label}`).
   4. Added `hideTitle` prop to `Brand` to center the logo icon when minimized without empty child gap artifacts.
-  5. Preserved user preference across route transitions and refreshes using client-safe `localStorage` (`chronos_sidebar_collapsed`).
+
+### [FS] Additive Database Migration & Historical Audited Guarantee (Migration 3_phase2_schema)
+- **Context:** Phase 2 introduces user profiles (`name`, `avatar`), configurable budget cycles (`BudgetCycleType`), rendered-hours targets, dynamic break entries, and shift activity reports, while existing Phase 1 time records must preserve their historical snapshot deductions.
+- **Decision:** Generated additive migration `3_phase2_schema/migration.sql`. Historical records retain `lunchMinutesApplied` untouched. Calculation engine `calc-hours.ts` prioritizes manual `breaks` list if present and transparently falls back to `lunchMinutesApplied` for historical shifts, guaranteeing 100% backward compatibility.
+
+### [FE] Settings Modal Relocation & Header Account Integration
+- **Context:** Settings previously occupied a top-level sidebar navigation slot alongside Dashboard/DTR/Budget/Calendar.
+- **Decision:** Removed Settings from desktop sidebar and mobile drawer. Relocated Settings into a client modal accessible from the top-right header `AccountMenuClient` dropdown (Account & Currency only, with lunch settings completely removed). `/settings` redirects to `/dashboard`.
+
+### [FS & FE] Direct Avatar Persistence via Validated Data URLs
+- **Context:** Profile picture upload required minimal, robust storage without introducing unconfigured external cloud storage bucket dependencies.
+- **Decision:** Implemented client-side file reading and validation (≤ 2MB, image MIME types) storing base64 Data URLs directly in `Profile.avatar` (`TEXT`). This works seamlessly across local dev, staging, and production environments with zero external storage configuration.
+
+### [FS & FE] Two-Phase Shift Lifecycle with Unbounded Manual Breaks
+- **Context:** Replacing automatic lunch deduction with an on-the-ground shift workflow: clocking in when starting work, and clocking out with arbitrary breaks when concluding or editing.
+- **Decision:** Split shift lifecycle: "Log Shift" captures only `workDate` and `timeInMinutes` (clock in). "Edit Time Record" captures `timeOutMinutes` (clock out) and dynamic `{ category, durationMinutes }` break rows with minutes/hours toggle and live recalculation.
+
+### [FS & FE] Shared Cycle Math Extraction to src/lib/cycle.ts
+- **Context:** Both `features/budget` and `features/dashboard` require cycle calculations (`WEEKLY`, `MONTHLY`, `SEMI_MONTHLY` with 15-day anchor), but `eslint-plugin-boundaries` strictly forbids cross-feature dependencies.
+- **Decision:** Extracted pure cycle calculation `getCyclePeriod` into `src/lib/cycle.ts`. Because `src/lib/` is accessible to all features, both modules compute identical cycle boundaries without architectural coupling.
+
+### [FE] Modal Portalization & Viewport Centering via React createPortal
+- **Context:** When opening the `SettingsModal` from the header `AccountMenuClient` dropdown, the modal was positioned off-center and clipped at the top of the browser viewport, hiding the modal title, close button, and top tabs.
+- **Root Cause:**
+  `SettingsModal` was rendered within `AccountMenuClient` inside `<header className="sticky top-0 z-30 h-[65px] backdrop-blur-md ...">`. Under CSS specifications (W3C Transforms & Filter Effects), an ancestor element with `backdrop-filter` or `transform` establishes a new containing block for all `position: fixed` descendants. The modal's `fixed inset-0 flex items-center justify-center` was thus constrained to the 65px header rather than the viewport, centering its 500px height around the 65px header (~32px vertical center) and pushing its top ~218px above the screen edge.
+- **Decision:**
+  1. Portalized `SettingsModal`, `DtrModal`, and `DailyActivityReportModal` directly into `document.body` via `createPortal(..., document.body)` after client mount verification.
+  2. Applied body scroll locking (`document.body.style.overflow = "hidden"`) while any modal is open.
+  3. Elevated modal backdrops to `z-[100]`, completely breaking free of ancestor stacking contexts, sticky positioning, and filter effects.
+
+### [FS & FE] Shift Update Latency & Supabase Connection Pooler Optimization
+- **Context:** When editing multiple DTR shifts consecutively, the first shift updated quickly while subsequent shift edits exhibited severe multi-second latency or hung on "Updating Shift...".
+- **Root Cause:**
+  1. `DATABASE_URL` in `.env` was using port `5432` on Supabase's PgBouncer pooler (`aws-0-ap-northeast-1.pooler.supabase.com:5432`), which operates in **Session mode** with a strict `pool_size: 15`. Concurrent queries during shift saves and revalidations immediately saturated the pool, triggering `EMAXCONNSESSION (max clients reached in session mode)` and queuing all subsequent operations.
+  2. Every shift edit was executing an unnecessary `ensureProfileAndSettings` transaction (~1000ms RTT waterfall) on an already authenticated and bootstrapped user.
+  3. `revalidatePath` in `saveDtrEntryAction` was redundantly invalidating `/dashboard` and `/calendar` alongside `/dtr`, forcing Next.js to trigger 10+ parallel Prisma queries that compounded pool exhaustion.
+  4. Activity notifications were awaited synchronously, and the client notification panel was polling every 4 seconds.
+- **Decision:**
+  1. Updated `DATABASE_URL` to port `6543` (transaction mode pooler with `&connection_limit=10`) where connections are immediately recycled upon query completion.
+  2. Skipped `ensureProfileAndSettings` in the hot path of shift edits, retaining it as an automated fallback only if a profile is missing.
+  3. Scoped `revalidatePath` strictly to `/dtr` for DTR shift edits. (Dynamic pages like `/dashboard` and `/calendar` read fresh database state on navigation).
+  4. Dispatched `recordActivity` non-blocking in the background and optimized break synchronization to skip `deleteMany`/`createMany` if breaks were unchanged.
+  5. Adjusted background notification heartbeat polling from 4s to 30s, relying on instant Supabase Realtime and client CustomEvents for real-time synchronization.
 
 
 

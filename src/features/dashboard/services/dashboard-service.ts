@@ -10,9 +10,11 @@ import {
   formatMinutesToTimeString,
 } from "@/lib/date";
 import { formatMinorUnits } from "@/lib/money";
+import { getCyclePeriod } from "@/lib/cycle";
 import {
   calculateWeeklyDtrSummary,
   calculateWeeklyBudgetSummary,
+  calculateRenderedHoursSummary,
 } from "../lib/calc-dashboard";
 import type {
   DashboardData,
@@ -31,7 +33,9 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   const [
     profile,
     settings,
+    budgetConfig,
     weekDtrEntries,
+    allDtrEntries,
     exactAllowance,
     historicalAllowance,
     weekExpenses,
@@ -40,6 +44,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   ] = await Promise.all([
     prisma.profile.findUnique({ where: { id: userId } }),
     prisma.settings.findUnique({ where: { userId } }),
+    prisma.budgetConfig.findUnique({ where: { userId } }),
     prisma.dtrEntry.findMany({
       where: {
         userId,
@@ -48,9 +53,13 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
           lte: sundayDate,
         },
       },
-      orderBy: {
-        workDate: "asc",
-      },
+      include: { breaks: true },
+      orderBy: { workDate: "asc" },
+    }),
+    prisma.dtrEntry.findMany({
+      where: { userId },
+      include: { breaks: true },
+      orderBy: { workDate: "desc" },
     }),
     prisma.weeklyAllowance.findUnique({
       where: {
@@ -86,7 +95,8 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     }),
     prisma.dtrEntry.findMany({
       where: { userId },
-      orderBy: { workDate: "desc" },
+      include: { breaks: true },
+      orderBy: [{ workDate: "desc" }, { createdAt: "desc" }],
       take: 5,
     }),
     prisma.expense.findMany({
@@ -99,32 +109,88 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     }),
   ]);
 
-  const allowanceRecord = exactAllowance ?? historicalAllowance;
-  const isInherited = !exactAllowance && Boolean(historicalAllowance);
-
   const currency = settings?.currency ?? "PHP";
-  const allowanceMinor = allowanceRecord?.amountMinor ?? 0;
+  const renderedHoursTarget = settings?.renderedHoursTarget ?? null;
 
-  // Calculate days remaining in week (Monday is day 0 of week -> 7 days remaining, Sunday is day 6 -> 1 day remaining)
-  const now = new Date();
-  const dayOfWeekMondayZero = (now.getDay() + 6) % 7; // Mon: 0, Tue: 1, ..., Sun: 6
-  const daysRemainingInWeek = Math.max(1, 7 - dayOfWeekMondayZero);
+  // Rendered Hours (OJT running total across all shifts)
+  const renderedHours = calculateRenderedHoursSummary(allDtrEntries, renderedHoursTarget);
 
+  // Weekly DTR summary
   const weeklyDtr = calculateWeeklyDtrSummary(weekDtrEntries);
-  const weeklyBudget = calculateWeeklyBudgetSummary(
-    allowanceMinor,
-    weekExpenses,
-    daysRemainingInWeek,
-    isInherited
-  );
+
+  // Cycle & Budget calculation
+  let allowanceMinor = 0;
+  let isInherited = false;
+  let cycleType: "WEEKLY" | "MONTHLY" | "SEMI_MONTHLY" = "WEEKLY";
+  let cycleLabel: string | undefined = undefined;
+  let activeExpenses = weekExpenses;
+  let daysRemainingInCycle = 7;
+
+  if (budgetConfig) {
+    cycleType = budgetConfig.cycleType;
+    allowanceMinor = budgetConfig.amountMinor;
+    const period = getCyclePeriod({
+      targetDate: todayStr,
+      cycleType: budgetConfig.cycleType,
+      anchorDate: budgetConfig.anchorDate ? formatDateToISO(budgetConfig.anchorDate) : null,
+    });
+    cycleLabel = period.displayLabel;
+    daysRemainingInCycle = period.daysRemaining;
+
+    // Fetch expenses for the cycle if not weekly
+    if (cycleType !== "WEEKLY") {
+      activeExpenses = await prisma.expense.findMany({
+        where: {
+          userId,
+          spentOn: {
+            gte: parseISODate(period.startDate),
+            lte: parseISODate(period.endDate),
+          },
+        },
+        orderBy: [{ spentOn: "desc" }, { createdAt: "desc" }],
+      });
+    }
+  } else {
+    const allowanceRecord = exactAllowance ?? historicalAllowance;
+    isInherited = !exactAllowance && Boolean(historicalAllowance);
+    allowanceMinor = allowanceRecord?.amountMinor ?? 0;
+
+    const now = new Date();
+    const dayOfWeekMondayZero = (now.getDay() + 6) % 7;
+    daysRemainingInCycle = Math.max(1, 7 - dayOfWeekMondayZero);
+  }
+
+  const weeklyBudget = {
+    ...calculateWeeklyBudgetSummary(
+      allowanceMinor,
+      activeExpenses,
+      daysRemainingInCycle,
+      isInherited
+    ),
+    cycleType,
+    cycleLabel,
+  };
 
   const recentShifts: RecentShiftItem[] = recentDtrEntries.map((entry) => {
-    const raw = entry.timeOutMinutes - entry.timeInMinutes;
-    const workedMinutes = Math.max(0, raw - entry.lunchMinutesApplied);
-    const hours = Math.floor(workedMinutes / 60);
-    const mins = workedMinutes % 60;
-    const formattedDuration = `${hours}h ${String(mins).padStart(2, "0")}m`;
-    const formattedTime = `${formatMinutesToTimeString(entry.timeInMinutes)} – ${formatMinutesToTimeString(entry.timeOutMinutes)}`;
+    let workedMinutes = 0;
+    let formattedDuration = "In Progress";
+    let formattedTime = `${formatMinutesToTimeString(entry.timeInMinutes)} – In Progress`;
+
+    if (entry.timeOutMinutes !== null) {
+      const raw = entry.timeOutMinutes - entry.timeInMinutes;
+      let breakDeduction = 0;
+      if (entry.breaks && entry.breaks.length > 0) {
+        breakDeduction = entry.breaks.reduce((sum, b) => sum + b.durationMinutes, 0);
+      } else {
+        breakDeduction = entry.lunchMinutesApplied;
+      }
+      workedMinutes = Math.max(0, raw - breakDeduction);
+      const hours = Math.floor(workedMinutes / 60);
+      const mins = workedMinutes % 60;
+      formattedDuration = `${hours}h ${String(mins).padStart(2, "0")}m`;
+      formattedTime = `${formatMinutesToTimeString(entry.timeInMinutes)} – ${formatMinutesToTimeString(entry.timeOutMinutes)}`;
+    }
+
     const workDate = formatDateToISO(entry.workDate);
 
     return {
@@ -158,14 +224,14 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     },
     settings: {
       currency,
-      lunchDeductionEnabled: settings?.lunchDeductionEnabled ?? true,
-      lunchBreakMinutes: settings?.lunchBreakMinutes ?? 60,
+      renderedHoursTarget,
     },
     currentWeek: {
       monday: mondayStr,
       sunday: sundayStr,
       displayLabel: `${formatDateDisplay(mondayStr)} – ${formatDateDisplay(sundayStr)}`,
     },
+    renderedHours,
     weeklyDtr,
     weeklyBudget,
     recentShifts,

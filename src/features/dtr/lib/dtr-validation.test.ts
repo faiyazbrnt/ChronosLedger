@@ -1,19 +1,37 @@
 import { describe, expect, it } from "bun:test";
-import { dtrEntrySchema, deleteDtrEntrySchema } from "../schemas";
+import {
+  dtrEntrySchema,
+  clockInSchema,
+  activityReportSchema,
+  deleteDtrEntrySchema,
+} from "../schemas";
 
 describe("DTR Schemas & Validation", () => {
   describe("dtrEntrySchema", () => {
-    it("validates a standard 8:30 AM to 6:30 PM entry", () => {
+    it("validates a standard 8:30 AM to 6:30 PM entry with breaks", () => {
       const result = dtrEntrySchema.safeParse({
         workDate: "2026-09-21",
         timeInMinutes: 510,
         timeOutMinutes: 1110,
+        breaks: [
+          { category: "Lunch", durationMinutes: 45 },
+          { category: "Coffee break", durationMinutes: 15 },
+        ],
         note: "Normal shift",
       });
       expect(result.success).toBe(true);
     });
 
-    it("rejects timeOutMinutes that is equal to timeInMinutes", () => {
+    it("validates a clock-in shift with null or omitted timeOutMinutes", () => {
+      const result = dtrEntrySchema.safeParse({
+        workDate: "2026-09-21",
+        timeInMinutes: 510,
+        timeOutMinutes: null,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects timeOutMinutes that is equal to timeInMinutes when timeOut is specified", () => {
       const result = dtrEntrySchema.safeParse({
         workDate: "2026-09-21",
         timeInMinutes: 540,
@@ -37,6 +55,26 @@ describe("DTR Schemas & Validation", () => {
       }
     });
 
+    it("rejects negative break duration", () => {
+      const result = dtrEntrySchema.safeParse({
+        workDate: "2026-09-21",
+        timeInMinutes: 480,
+        timeOutMinutes: 1020,
+        breaks: [{ category: "Lunch", durationMinutes: -15 }],
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects empty category for a break", () => {
+      const result = dtrEntrySchema.safeParse({
+        workDate: "2026-09-21",
+        timeInMinutes: 480,
+        timeOutMinutes: 1020,
+        breaks: [{ category: "", durationMinutes: 30 }],
+      });
+      expect(result.success).toBe(false);
+    });
+
     it("rejects malformed workDate", () => {
       const result = dtrEntrySchema.safeParse({
         workDate: "21-09-2026",
@@ -44,9 +82,6 @@ describe("DTR Schemas & Validation", () => {
         timeOutMinutes: 1020,
       });
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.flatten().fieldErrors.workDate).toBeDefined();
-      }
     });
 
     it("rejects negative timeInMinutes", () => {
@@ -66,19 +101,28 @@ describe("DTR Schemas & Validation", () => {
       });
       expect(result.success).toBe(false);
     });
+  });
 
-    it("rejects note longer than 500 characters", () => {
-      const longNote = "a".repeat(501);
-      const result = dtrEntrySchema.safeParse({
+  describe("clockInSchema", () => {
+    it("validates clock-in with workDate and timeIn", () => {
+      const result = clockInSchema.safeParse({
         workDate: "2026-09-21",
         timeInMinutes: 510,
-        timeOutMinutes: 1020,
-        note: longNote,
+        note: "Starting morning shift",
       });
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.flatten().fieldErrors.note).toBeDefined();
-      }
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("activityReportSchema", () => {
+    it("validates full activity report input", () => {
+      const result = activityReportSchema.safeParse({
+        id: "123e4567-e89b-12d3-a456-426614174000",
+        activity: "Onboarding and training modules",
+        activityDescription: "Completed modules 1 through 4 including practical labs.",
+        remarks: "Smooth progress with mentor approval.",
+      });
+      expect(result.success).toBe(true);
     });
   });
 

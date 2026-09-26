@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import type { ExpenseCategory } from "../types";
+import type { ExpenseCategory, BudgetCycleType } from "../types";
 
 export async function getExpensesForRange(params: {
   userId: string;
@@ -70,6 +70,58 @@ export async function deleteExpense(params: {
     where: {
       id: params.id,
       userId: params.userId,
+    },
+  });
+}
+
+export async function getBudgetConfig(userId: string) {
+  const config = await prisma.budgetConfig.findUnique({
+    where: { userId },
+  });
+
+  if (config) {
+    return config;
+  }
+
+  // Fallback: check historical weeklyAllowance
+  const latestAllowance = await prisma.weeklyAllowance.findFirst({
+    where: { userId },
+    orderBy: { weekStart: "desc" },
+  });
+
+  if (latestAllowance) {
+    return {
+      id: latestAllowance.id,
+      userId,
+      cycleType: "WEEKLY" as BudgetCycleType,
+      amountMinor: latestAllowance.amountMinor,
+      anchorDate: null,
+      createdAt: latestAllowance.createdAt,
+      updatedAt: latestAllowance.updatedAt,
+    };
+  }
+
+  return null;
+}
+
+export async function upsertBudgetConfig(params: {
+  userId: string;
+  cycleType: BudgetCycleType;
+  amountMinor: number;
+  anchorDate?: Date | null;
+}) {
+  return prisma.budgetConfig.upsert({
+    where: { userId: params.userId },
+    update: {
+      cycleType: params.cycleType,
+      amountMinor: params.amountMinor,
+      anchorDate: params.anchorDate ?? null,
+    },
+    create: {
+      userId: params.userId,
+      cycleType: params.cycleType,
+      amountMinor: params.amountMinor,
+      anchorDate: params.anchorDate ?? null,
     },
   });
 }

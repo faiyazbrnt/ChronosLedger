@@ -22,8 +22,6 @@ export async function ensureProfileAndSettings({
       update: {},
       create: {
         userId,
-        lunchDeductionEnabled: true,
-        lunchBreakMinutes: 60,
         currency: "PHP",
       },
     });

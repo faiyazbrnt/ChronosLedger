@@ -4,9 +4,15 @@ export type SettingsActionResponse<T = void> =
 
 export interface UserSettingsData {
   userId: string;
-  lunchDeductionEnabled: boolean;
-  lunchBreakMinutes: number;
   currency: string;
+  renderedHoursTarget?: number | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UserProfileData {
+  id: string;
+  email: string;
+  name?: string | null;
+  avatar?: string | null;
 }

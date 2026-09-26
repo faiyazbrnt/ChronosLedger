@@ -1,21 +1,76 @@
 import type {
   WeeklyDtrSummary,
   WeeklyBudgetSummary,
+  RenderedHoursSummary,
   DashboardBudgetStatus,
 } from "../types";
 
+export interface ShiftCalculationItem {
+  timeInMinutes: number;
+  timeOutMinutes: number | null;
+  lunchMinutesApplied: number;
+  breaks?: Array<{ durationMinutes: number }>;
+}
+
+export function calculateRenderedHoursSummary(
+  entries: ShiftCalculationItem[],
+  targetHours: number | null
+): RenderedHoursSummary {
+  const totalWorkedMinutes = entries.reduce((total, entry) => {
+    if (entry.timeOutMinutes === null) return total;
+    const raw = entry.timeOutMinutes - entry.timeInMinutes;
+    if (raw <= 0) return total;
+
+    let breakDeduction = 0;
+    if (entry.breaks && entry.breaks.length > 0) {
+      breakDeduction = entry.breaks.reduce((sum, b) => sum + b.durationMinutes, 0);
+    } else {
+      breakDeduction = entry.lunchMinutesApplied;
+    }
+
+    const net = Math.max(0, raw - breakDeduction);
+    return total + net;
+  }, 0);
+
+  const hours = Math.floor(totalWorkedMinutes / 60);
+  const minutes = totalWorkedMinutes % 60;
+  const formattedTotalHours = `${hours}h ${String(minutes).padStart(2, "0")}m`;
+  const decimalTotalHours = (totalWorkedMinutes / 60).toFixed(2);
+
+  const hasTarget = typeof targetHours === "number" && targetHours > 0;
+  const targetMinutes = hasTarget ? targetHours * 60 : 0;
+  const percentTarget =
+    targetMinutes > 0
+      ? Math.min(100, Math.round((totalWorkedMinutes / targetMinutes) * 100))
+      : 0;
+
+  return {
+    totalWorkedMinutes,
+    formattedTotalHours,
+    decimalTotalHours,
+    targetHours,
+    percentTarget,
+    hasTarget,
+  };
+}
+
 export function calculateWeeklyDtrSummary(
-  entries: Array<{
-    timeInMinutes: number;
-    timeOutMinutes: number;
-    lunchMinutesApplied: number;
-  }>,
+  entries: ShiftCalculationItem[],
   targetHours = 40
 ): WeeklyDtrSummary {
   const totalMinutesWorked = entries.reduce((total, entry) => {
+    if (entry.timeOutMinutes === null) return total;
     const raw = entry.timeOutMinutes - entry.timeInMinutes;
     if (raw <= 0) return total;
-    const net = Math.max(0, raw - entry.lunchMinutesApplied);
+
+    let breakDeduction = 0;
+    if (entry.breaks && entry.breaks.length > 0) {
+      breakDeduction = entry.breaks.reduce((sum, b) => sum + b.durationMinutes, 0);
+    } else {
+      breakDeduction = entry.lunchMinutesApplied;
+    }
+
+    const net = Math.max(0, raw - breakDeduction);
     return total + net;
   }, 0);
 
@@ -34,7 +89,7 @@ export function calculateWeeklyDtrSummary(
     totalMinutesWorked,
     formattedHours,
     decimalHours,
-    daysWorked: entries.length,
+    daysWorked: entries.filter((e) => e.timeOutMinutes !== null).length,
     targetHours,
     percentTarget,
   };
