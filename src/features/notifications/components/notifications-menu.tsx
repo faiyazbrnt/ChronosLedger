@@ -187,10 +187,10 @@ export function NotificationsMenu({ userId: initialUserId }: NotificationsMenuPr
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleFocus);
 
-    // 5. Fast heartbeat polling every 4s for instant multi-client guarantee
+    // 5. Background fallback heartbeat polling (Realtime + event dispatch provide instant updates)
     const pollInterval = window.setInterval(() => {
       void load(true);
-    }, 4000);
+    }, 30000);
 
     return () => {
       isMounted = false;

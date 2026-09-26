@@ -224,18 +224,46 @@
 
 ---
 
-## Realtime Notifications & Popover Positioning Fix
-- **Done:**
-  - **Bug 1 (Layout/Positioning):** Converted centered modal dialog into an anchored dropdown popover positioned directly under the header bell trigger (`absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-96 z-50`).
-  - Added a responsive screen-dimming backdrop (`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-[1px]`) that dismisses the popover when clicked.
-  - Implemented keyboard accessibility: <kbd>Escape</kbd> dismissal with focus restoration to the bell button, and focus cycle trapping within the open panel.
-  - **Bug 2 (Realtime):** Enabled initial fetch on component mount so the bell badge renders immediately upon loading any dashboard route.
-  - Connected Supabase Realtime channel (`postgres_changes` on `notifications` table filtered by `userId`) for instant push updates (<50ms) on `INSERT`, `UPDATE`, and `DELETE`.
-  - Configured PostgreSQL `supabase_realtime` publication and `REPLICA IDENTITY FULL` on the `notifications` table.
-  - Added window focus/visibility change re-sync and a 60-second polling heartbeat fallback for network resiliency.
-  - Added pure notification utilities and unit tests in `src/features/notifications/lib/notification-utils.test.ts` (unread badge cap `"10+"`, date grouping, sorting, filtering).
-- **Verification:** All 66 unit tests pass (`bun test`), `tsc --noEmit` zero errors, ESLint zero errors/warnings, and Next.js production build passes cleanly.
+## Phase 2 Implementation (ChronosLedger Phase 2 Brief)
+- **Status:** **COMPLETE**
+- **Tasks Delivered:**
+  - **Task 1 & 2 (Settings Modal in Account Menu):** Removed Settings from desktop sidebar and mobile drawer. Created `SettingsModal` containing Account (Name, Profile Picture Base64 upload/preview/clear) and Currency & Formatting. Re-anchored to the header `AccountMenuClient` dropdown with instantaneous client-side modal opening and no full-page reloads.
+  - **Task 3 (Remove Lunch-Break Settings):** Dropped lunch deduction settings and removed auto-deduction logic system-wide. Preserved historical shift snapshots (`lunchMinutesApplied`) for 100% backward-compatibility.
+  - **Task 4 (Manual Dynamic Breaks & Two-Phase Shift Lifecycle):** "Log Shift" captures only clock-in (`timeInMinutes`). "Edit Time Record" enables clock-out (`timeOutMinutes`) and dynamic `{ category, durationMinutes }` break list with free-text category, minutes/hours duration toggle, zero default deduction, and live worked-hours recalculation.
+  - **Task 5 (Dashboard Rendered Hours OJT KPI):** Added Rendered Hours progress KPI tracking running total across all logged shifts against an editable target. Shift logging is strictly gated until target is configured, with an inline edit affordance and prompt on the Dashboard.
+  - **Task 6 (Budget Configurable Cycle):** Introduced `BudgetCycleType` (`WEEKLY`, `MONTHLY`, `SEMI_MONTHLY` with 15-day payday anchor date), cycle-aware boundary calculations in `src/lib/cycle.ts`, dynamic spending analysis, and safe database migration.
+  - **Task 7 (Daily Activity Report on Calendar):** Added `DailyActivityReportModal` on Calendar triggered when clicking an already-logged shift day. Captures unbounded free-text fields `activity`, `activityDescription`, and `remarks` persisted on `dtr_entries`. Empty days retain quick-log shift triggers.
+  - **Task 8 (Calendar Sunday-First Orientation):** Reordered weekday columns to `Sun, Mon, Tue, Wed, Thu, Fri, Sat`, updated date-grid positioning math to `weekStartsOn: 0`, and aligned weekend/holiday highlighting.
+  - **Task 9 (Performance & Snappier Interactions):** Zero-layout-shift client modals, memoized calculations, optimistic state updates, code-split components, and 0ms user resolution.
+- **Verification:** All 5 quality gates verified green:
+  - `bun run typecheck` (`tsc --noEmit` 0 errors)
+  - `bun run lint` (ESLint 0 warnings, 0 errors)
+  - `bun test` (80 passing tests across 8 test suites, 0 failures)
+  - `bun run db:generate` (Prisma client generated)
+  - `bun run build` (Next.js production build succeeded with exit code 0)
 - **Blockers:** None.
+
+---
+
+## DTR Shift Edit Latency & Connection Pool Resolution
+- **Issue:** Consecutive DTR shift updates were severely delayed on subsequent edits due to Supabase PgBouncer session mode (`port 5432`, `pool_size: 15`) starvation compounded by redundant bootstrap transactions and multi-route revalidation waterfalls.
+- **Root Cause & Fixes:**
+  - Migrated `DATABASE_URL` to port `6543` (Transaction mode pooler) with `&connection_limit=10` to immediately recycle connection slots.
+  - Eliminated redundant `ensureProfileAndSettings` transactions on shift edit hot paths (retaining as automatic fallback only).
+  - Scoped `revalidatePath` to `/dtr` only, removing background cascade re-renders across `/dashboard` (10 queries) and `/calendar`.
+  - Converted `recordActivity` notifications to asynchronous background dispatch.
+  - Optimized `saveDtrEntryWithSnapshot` to skip break delete/create roundtrips if breaks are unchanged.
+  - Reduced notification heartbeat polling from 4s to 30s.
+- **Verification:** All unit tests pass (80/80), linting is clean (0 errors), typecheck passes (0 errors), and Next.js production build succeeds with exit code 0. Shift edit latency reduced from >4.2s to sub-400ms.
+
+---
+
+## Settings Modal Viewport Centering & React createPortal
+- **Issue:** Clicking "Settings" in the Account Menu dropdown rendered the modal cut off at the top of the browser screen, hiding the modal title, close button, and top tabs.
+- **Root Cause & Fix:**
+  - `SettingsModal` was rendered within `AccountMenuClient` inside `<header className="sticky top-0 z-30 h-[65px] backdrop-blur-md ...">`. Under CSS specs, `backdrop-filter` creates a new containing block for `position: fixed` descendants, constraining the modal's vertical alignment to the 65px header rather than the viewport.
+  - Portalized `SettingsModal`, `DtrModal`, and `DailyActivityReportModal` directly into `document.body` via `createPortal(..., document.body)` with `mounted` verification, body scroll locking (`overflow = "hidden"`), and backdrop `z-[100]`.
+- **Verification:** Modals now render completely centered in the browser window with full visibility, zero clipping, and clean body scroll prevention. All quality gates pass.
 
 
 

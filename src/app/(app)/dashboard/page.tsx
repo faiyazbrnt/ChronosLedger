@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/lib/supabase/server";
 import { DashboardView, getDashboardData } from "@/features/dashboard";
+import { updateRenderedHoursTargetAction } from "@/features/settings";
 
 export default async function DashboardPage() {
   const user = await getAuthUser();
@@ -11,5 +12,10 @@ export default async function DashboardPage() {
 
   const data = await getDashboardData(user.id);
 
-  return <DashboardView data={data} />;
+  return (
+    <DashboardView
+      data={data}
+      updateTargetAction={updateRenderedHoursTargetAction}
+    />
+  );
 }

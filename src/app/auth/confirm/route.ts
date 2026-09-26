@@ -1,7 +1,7 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { upsertProfileAndSettings } from "@/features/auth";
+import { ensureProfileAndSettings } from "@/lib/profile-bootstrap";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       } = await supabase.auth.getUser();
 
       if (user?.id && user?.email) {
-        await upsertProfileAndSettings({
+        await ensureProfileAndSettings({
           userId: user.id,
           email: user.email,
         });
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       } = await supabase.auth.getUser();
 
       if (user?.id && user?.email) {
-        await upsertProfileAndSettings({
+        await ensureProfileAndSettings({
           userId: user.id,
           email: user.email,
         });

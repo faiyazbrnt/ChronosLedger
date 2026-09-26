@@ -46,6 +46,7 @@ import {
   calculateRemaining,
   calculateSafeToSpendPerDay,
   calculateCategoryTotals,
+  getCyclePeriod,
 } from "../lib/calc-budget";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,6 +67,7 @@ const CategoryChart = dynamic(
 import type {
   ExpenseData,
   WeeklyAllowanceData,
+  BudgetConfigData,
   ExpenseCategory,
   BudgetHealthStatus,
 } from "../types";
@@ -86,6 +88,7 @@ const CATEGORY_ICONS: Record<
 interface BudgetViewProps {
   initialExpenses?: ExpenseData[];
   initialAllowance?: WeeklyAllowanceData | null;
+  initialBudgetConfig?: BudgetConfigData | null;
   currency?: string;
   initialWeekMonday?: string;
 }
@@ -93,6 +96,7 @@ interface BudgetViewProps {
 export function BudgetView({
   initialExpenses = [],
   initialAllowance,
+  initialBudgetConfig,
   currency = "PHP",
   initialWeekMonday,
 }: BudgetViewProps) {
@@ -111,6 +115,9 @@ export function BudgetView({
   const [allowance, setAllowance] = useState<WeeklyAllowanceData | null>(
     initialAllowance ?? null
   );
+  const [budgetConfig, setBudgetConfig] = useState<BudgetConfigData | null>(
+    initialBudgetConfig ?? null
+  );
 
   // Modals state
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -124,35 +131,38 @@ export function BudgetView({
 
   const selectedSunday = getSundayOfWeek(selectedMonday);
 
-  // Filter expenses for current week
+  // Configured cycle calculations
+  const cycleType = budgetConfig?.cycleType ?? "WEEKLY";
+  const cycleAmountMinor = budgetConfig
+    ? budgetConfig.amountMinor
+    : allowance?.amountMinor ?? 0;
+
+  const currentPeriod = getCyclePeriod({
+    targetDate: selectedMonday,
+    cycleType,
+    anchorDate: budgetConfig?.anchorDate,
+  });
+
+  // Filter expenses for active cycle period
   const weekExpenses = expenses.filter(
-    (e) => e.spentOn >= selectedMonday && e.spentOn <= selectedSunday
+    (e) => e.spentOn >= currentPeriod.startDate && e.spentOn <= currentPeriod.endDate
   );
 
-  const allowanceMinor = allowance?.amountMinor ?? 0;
   const weekTotalSpentMinor = weekExpenses.reduce(
     (acc, curr) => acc + curr.amountMinor,
     0
   );
-  const remainingMinor = calculateRemaining(allowanceMinor, weekTotalSpentMinor);
-
-  // Calculate days left in the week through Sunday
-  const today = new Date(todayStr + "T00:00:00Z");
-  const sunday = new Date(selectedSunday + "T00:00:00Z");
-  const diffDays = Math.ceil(
-    (sunday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const daysLeft = Math.max(1, diffDays + 1);
+  const remainingMinor = calculateRemaining(cycleAmountMinor, weekTotalSpentMinor);
 
   const safeToSpendPerDayMinor = calculateSafeToSpendPerDay(
     remainingMinor,
-    daysLeft
+    currentPeriod.daysRemaining
   );
 
   // Budget Status & Health Logic
   let status: BudgetHealthStatus = "ON_TRACK";
   const percentUsed =
-    allowanceMinor > 0 ? (weekTotalSpentMinor / allowanceMinor) * 100 : 0;
+    cycleAmountMinor > 0 ? (weekTotalSpentMinor / cycleAmountMinor) * 100 : 0;
 
   if (remainingMinor < 0) {
     status = "OVER_BUDGET";
@@ -263,7 +273,7 @@ export function BudgetView({
             className="text-xs font-semibold gap-1.5"
           >
             <Wallet className="h-3.5 w-3.5" />
-            <span>Set Allowance</span>
+            <span>Budget Cycle</span>
           </Button>
           <Button
             size="sm"
@@ -320,7 +330,7 @@ export function BudgetView({
           </Button>
 
           <span className="text-sm font-bold text-foreground ml-2 font-mono">
-            {formatDateDisplay(selectedMonday)} – {formatDateDisplay(selectedSunday)}
+            {currentPeriod.displayLabel}
           </span>
         </div>
 
@@ -367,25 +377,27 @@ export function BudgetView({
               <CardHeader className="pb-1.5 pt-4 px-4">
                 <div className="flex items-center justify-between">
                   <CardDescription className="text-[11px] uppercase font-bold tracking-wider">
-                    Weekly Allowance
+                    {cycleType === "MONTHLY"
+                      ? "Monthly Budget"
+                      : cycleType === "SEMI_MONTHLY"
+                      ? "15-Day Budget"
+                      : "Weekly Allowance"}
                   </CardDescription>
-                  {allowance?.isInherited && (
-                    <Badge variant="outline" className="text-[10px]">
-                      Inherited
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="text-[10px] font-mono">
+                    {cycleType === "SEMI_MONTHLY" ? "15-Day" : cycleType}
+                  </Badge>
                 </div>
                 <CardTitle className="text-2xl sm:text-3xl font-black text-foreground font-mono">
-                  {formatMinorUnits(allowanceMinor, currency)}
+                  {formatMinorUnits(cycleAmountMinor, currency)}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-0">
                 <button
                   type="button"
                   onClick={() => setIsAllowanceModalOpen(true)}
-                  className="text-xs text-link underline underline-offset-2 hover:opacity-80 transition-opacity"
+                  className="text-xs text-link underline underline-offset-2 hover:opacity-80 transition-opacity cursor-pointer"
                 >
-                  {allowanceMinor > 0 ? "Adjust allowance" : "Set allowance"}
+                  Configure Cycle & Budget
                 </button>
               </CardContent>
             </Card>
@@ -445,7 +457,7 @@ export function BudgetView({
                   <div className="flex items-center gap-1 text-xs font-medium text-foreground">
                     <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span>
-                      Safe to spend: {formatMinorUnits(safeToSpendPerDayMinor, currency)} / day ({daysLeft}d left)
+                      Safe to spend: {formatMinorUnits(safeToSpendPerDayMinor, currency)} / day ({currentPeriod.daysRemaining}d left)
                     </span>
                   </div>
                 )}
@@ -490,10 +502,10 @@ export function BudgetView({
 
               <CardDescription className="text-xs">
                 {status === "OVER_BUDGET"
-                  ? `You have spent ${formatMinorUnits(weekTotalSpentMinor, currency)}, exceeding your ${formatMinorUnits(allowanceMinor, currency)} allowance.`
+                  ? `You have spent ${formatMinorUnits(weekTotalSpentMinor, currency)}, exceeding your ${formatMinorUnits(cycleAmountMinor, currency)} allowance.`
                   : status === "NEAR_LIMIT"
-                  ? `You have consumed ${percentUsed.toFixed(0)}% of your allowance with ${daysLeft} days remaining in the week.`
-                  : `Spending is well-balanced with ${formatMinorUnits(remainingMinor, currency)} remaining for the rest of the week.`}
+                  ? `You have consumed ${percentUsed.toFixed(0)}% of your allowance with ${currentPeriod.daysRemaining} days remaining in this cycle.`
+                  : `Spending is well-balanced with ${formatMinorUnits(remainingMinor, currency)} remaining for the rest of this cycle.`}
               </CardDescription>
             </CardHeader>
 
@@ -512,7 +524,7 @@ export function BudgetView({
               </div>
               <div className="flex justify-between text-xs text-muted-foreground font-mono pt-0.5">
                 <span>Spent: {formatMinorUnits(weekTotalSpentMinor, currency)}</span>
-                <span>Allowance: {formatMinorUnits(allowanceMinor, currency)}</span>
+                <span>Allowance: {formatMinorUnits(cycleAmountMinor, currency)}</span>
               </div>
             </CardContent>
           </Card>
@@ -738,13 +750,20 @@ export function BudgetView({
         onExpenseSaved={handleExpenseSaved}
       />
 
-      {/* Allowance Modal */}
+      {/* Allowance & Cycle Modal */}
       <AllowanceModal
         isOpen={isAllowanceModalOpen}
         onClose={() => setIsAllowanceModalOpen(false)}
         weekStart={selectedMonday}
-        currentAllowanceMinor={allowanceMinor}
+        currentAllowanceMinor={cycleAmountMinor}
+        currentCycleType={cycleType}
+        currentAnchorDate={budgetConfig?.anchorDate}
         currency={currency}
+        referenceDate={selectedMonday}
+        onBudgetConfigSaved={(newConfig) => {
+          setBudgetConfig(newConfig);
+          notify.success(`Budget updated to ${newConfig.cycleType.toLowerCase().replace('_', ' ')} cycle`);
+        }}
         onAllowanceSaved={handleAllowanceSaved}
       />
     </div>

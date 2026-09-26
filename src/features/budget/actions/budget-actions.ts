@@ -11,20 +11,24 @@ import {
   updateExpenseSchema,
   deleteExpenseSchema,
   allowanceSchema,
+  budgetCycleSchema,
   type ExpenseInput,
   type UpdateExpenseInput,
   type AllowanceInput,
+  type BudgetCycleInput,
 } from "../schemas";
 import {
   createExpense,
   updateExpense,
   deleteExpense,
   upsertWeeklyAllowance,
+  upsertBudgetConfig,
 } from "../services/budget-service";
 import type {
   BudgetActionResponse,
   ExpenseData,
   WeeklyAllowanceData,
+  BudgetConfigData,
 } from "../types";
 
 export async function createExpenseAction(
@@ -183,6 +187,79 @@ export async function deleteExpenseAction(
   }
 }
 
+export async function setBudgetCycleAction(
+  rawInput: BudgetCycleInput
+): Promise<BudgetActionResponse<BudgetConfigData>> {
+  const result = budgetCycleSchema.safeParse(rawInput);
+  if (!result.success) {
+    return {
+      ok: false,
+      error: "Please enter a valid budget configuration.",
+      fieldErrors: result.error.flatten().fieldErrors,
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user || !user.email) {
+    return {
+      ok: false,
+      error: "You must be signed in to configure your budget cycle.",
+    };
+  }
+
+  try {
+    await ensureProfileAndSettings({ userId: user.id, email: user.email ?? "" });
+    const anchorDate = result.data.anchorDate
+      ? parseISODate(result.data.anchorDate)
+      : null;
+
+    const updated = await upsertBudgetConfig({
+      userId: user.id,
+      cycleType: result.data.cycleType,
+      amountMinor: result.data.amountMinor,
+      anchorDate,
+    });
+
+    await recordActivity(
+      user.id,
+      `Budget updated: ${result.data.cycleType} cycle`,
+      "expense"
+    );
+
+    revalidatePath("/budget");
+    revalidatePath("/dashboard");
+
+    const serialized: BudgetConfigData = {
+      id: updated.id,
+      userId: updated.userId,
+      cycleType: updated.cycleType,
+      amountMinor: updated.amountMinor,
+      anchorDate: updated.anchorDate ? formatDateToISO(updated.anchorDate) : null,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
+
+    return {
+      ok: true,
+      data: serialized,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: getSafeServerActionError(
+        error,
+        "save budget cycle",
+        "We couldn't save your budget configuration. Please try again."
+      ),
+    };
+  }
+}
+
 export async function setAllowanceAction(
   rawInput: AllowanceInput
 ): Promise<BudgetActionResponse<WeeklyAllowanceData>> {
@@ -215,6 +292,14 @@ export async function setAllowanceAction(
       userId: user.id,
       weekStart,
       amountMinor: result.data.amountMinor,
+    });
+
+    // Also update budgetConfig as WEEKLY for consistency
+    await upsertBudgetConfig({
+      userId: user.id,
+      cycleType: "WEEKLY",
+      amountMinor: result.data.amountMinor,
+      anchorDate: null,
     });
 
     revalidatePath("/budget");

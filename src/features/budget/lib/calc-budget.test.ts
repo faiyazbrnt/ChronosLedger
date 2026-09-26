@@ -3,6 +3,7 @@ import {
   calculateRemaining,
   calculateSafeToSpendPerDay,
   calculateCategoryTotals,
+  getCyclePeriod,
 } from "./calc-budget";
 
 describe("Budget pure calculations", () => {
@@ -47,5 +48,64 @@ describe("Budget pure calculations", () => {
 
   it("handles empty expenses array for category totals", () => {
     expect(calculateCategoryTotals([])).toEqual({});
+  });
+
+  describe("getCyclePeriod", () => {
+    it("computes WEEKLY cycle starting on Monday and ending on Sunday", () => {
+      // 2026-03-25 is a Wednesday. Monday is 2026-03-23, Sunday is 2026-03-29
+      const period = getCyclePeriod({
+        targetDate: "2026-03-25",
+        cycleType: "WEEKLY",
+      });
+      expect(period.startDate).toBe("2026-03-23");
+      expect(period.endDate).toBe("2026-03-29");
+      expect(period.totalDays).toBe(7);
+      expect(period.displayLabel).toContain("2026-03-23");
+    });
+
+    it("computes MONTHLY cycle from 1st to last day of month", () => {
+      // 2026-02-14: February 2026 has 28 days
+      const period = getCyclePeriod({
+        targetDate: "2026-02-14",
+        cycleType: "MONTHLY",
+      });
+      expect(period.startDate).toBe("2026-02-01");
+      expect(period.endDate).toBe("2026-02-28");
+      expect(period.totalDays).toBe(28);
+      expect(period.displayLabel).toBe("February 2026");
+    });
+
+    it("computes SEMI_MONTHLY 15-day cycle forward from anchor date", () => {
+      // Anchor: 2026-03-01. Reference: 2026-03-10 (falls in first 15 days: 2026-03-01 to 2026-03-15)
+      const period1 = getCyclePeriod({
+        targetDate: "2026-03-10",
+        cycleType: "SEMI_MONTHLY",
+        anchorDate: "2026-03-01",
+      });
+      expect(period1.startDate).toBe("2026-03-01");
+      expect(period1.endDate).toBe("2026-03-15");
+      expect(period1.totalDays).toBe(15);
+
+      // Reference: 2026-03-18 (falls in next 15 days: 2026-03-16 to 2026-03-30)
+      const period2 = getCyclePeriod({
+        targetDate: "2026-03-18",
+        cycleType: "SEMI_MONTHLY",
+        anchorDate: "2026-03-01",
+      });
+      expect(period2.startDate).toBe("2026-03-16");
+      expect(period2.endDate).toBe("2026-03-30");
+    });
+
+    it("computes SEMI_MONTHLY 15-day cycle backward when reference is before anchor", () => {
+      // Anchor: 2026-04-01. Reference: 2026-03-20 (falls in previous 15-day window ending before anchor)
+      const period = getCyclePeriod({
+        targetDate: "2026-03-20",
+        cycleType: "SEMI_MONTHLY",
+        anchorDate: "2026-04-01",
+      });
+      expect(period.startDate <= "2026-03-20").toBe(true);
+      expect(period.endDate >= "2026-03-20").toBe(true);
+      expect(period.totalDays).toBe(15);
+    });
   });
 });

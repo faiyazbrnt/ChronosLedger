@@ -12,8 +12,10 @@ import {
   BudgetView,
   getExpensesForRange,
   getWeeklyAllowance,
+  getBudgetConfig,
   type ExpenseData,
   type WeeklyAllowanceData,
+  type BudgetConfigData,
 } from "@/features/budget";
 import { getUserSettings } from "@/features/settings";
 
@@ -40,8 +42,8 @@ export default async function BudgetPage({ searchParams }: BudgetPageProps) {
   const rangeStart = parseISODate(addWeeks(activeMonday, -4));
   const rangeEnd = parseISODate(addWeeks(activeMonday, 5));
 
-  // Preload settings, allowance, and expenses in parallel
-  const [settings, rawAllowance, rawExpenses] = await Promise.all([
+  // Preload settings, allowance, expenses, and budget config in parallel
+  const [settings, rawAllowance, rawExpenses, rawBudgetConfig] = await Promise.all([
     getUserSettings(user.id),
     getWeeklyAllowance({
       userId: user.id,
@@ -52,6 +54,7 @@ export default async function BudgetPage({ searchParams }: BudgetPageProps) {
       startDate: rangeStart,
       endDate: rangeEnd,
     }),
+    getBudgetConfig(user.id),
   ]);
 
   const currency = settings?.currency ?? "PHP";
@@ -77,10 +80,20 @@ export default async function BudgetPage({ searchParams }: BudgetPageProps) {
     updatedAt: e.updatedAt,
   }));
 
+  const serializedBudgetConfig: BudgetConfigData | null = rawBudgetConfig
+    ? {
+        ...rawBudgetConfig,
+        anchorDate: rawBudgetConfig.anchorDate
+          ? formatDateToISO(rawBudgetConfig.anchorDate)
+          : null,
+      }
+    : null;
+
   return (
     <BudgetView
       initialExpenses={serializedExpenses}
       initialAllowance={serializedAllowance}
+      initialBudgetConfig={serializedBudgetConfig}
       currency={currency}
       initialWeekMonday={activeMonday}
     />

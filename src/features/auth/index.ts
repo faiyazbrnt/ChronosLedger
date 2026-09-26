@@ -9,4 +9,3 @@ export * from "./components/register-form";
 export * from "./components/verify-email-content";
 export * from "./components/logout-button";
 export * from "./components/account-menu";
-export * from "./services/auth-service";

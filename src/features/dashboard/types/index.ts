@@ -13,11 +13,11 @@ export interface RecentShiftItem {
   id: string;
   workDate: string; // YYYY-MM-DD
   timeInMinutes: number;
-  timeOutMinutes: number;
+  timeOutMinutes: number | null;
   lunchMinutesApplied: number;
   workedMinutes: number;
-  formattedTime: string; // e.g. "8:30 AM – 6:30 PM"
-  formattedDuration: string; // e.g. "9h 00m"
+  formattedTime: string; // e.g. "8:30 AM – 6:30 PM" or "8:30 AM – In Progress"
+  formattedDuration: string; // e.g. "9h 00m" or "In Progress"
   note: string | null;
 }
 
@@ -28,6 +28,15 @@ export interface RecentExpenseItem {
   amountMinor: number;
   formattedAmount: string;
   note: string | null;
+}
+
+export interface RenderedHoursSummary {
+  totalWorkedMinutes: number;
+  formattedTotalHours: string;
+  decimalTotalHours: string;
+  targetHours: number | null;
+  percentTarget: number;
+  hasTarget: boolean;
 }
 
 export interface WeeklyDtrSummary {
@@ -47,6 +56,8 @@ export interface WeeklyBudgetSummary {
   percentUsed: number;
   status: DashboardBudgetStatus;
   isInherited: boolean;
+  cycleType?: "WEEKLY" | "MONTHLY" | "SEMI_MONTHLY";
+  cycleLabel?: string;
 }
 
 export interface DashboardData {
@@ -55,14 +66,14 @@ export interface DashboardData {
   };
   settings: {
     currency: string;
-    lunchDeductionEnabled: boolean;
-    lunchBreakMinutes: number;
+    renderedHoursTarget: number | null;
   };
   currentWeek: {
     monday: string;
     sunday: string;
     displayLabel: string;
   };
+  renderedHours: RenderedHoursSummary;
   weeklyDtr: WeeklyDtrSummary;
   weeklyBudget: WeeklyBudgetSummary;
   recentShifts: RecentShiftItem[];

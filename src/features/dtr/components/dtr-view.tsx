@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import Link from "next/link";
 import {
   Clock,
   Plus,
@@ -10,7 +11,6 @@ import {
   Trash2,
   AlertCircle,
   FileText,
-  Utensils,
   CalendarDays,
   Loader2,
 } from "lucide-react";
@@ -48,17 +48,18 @@ import type { DtrEntryData } from "../types";
 interface DtrViewProps {
   initialEntries?: DtrEntryData[];
   initialSettings?: {
-    lunchDeductionEnabled: boolean;
-    lunchBreakMinutes: number;
     currency: string;
+    renderedHoursTarget?: number | null;
   } | null;
   initialWeekMonday?: string;
+  hasRenderedHoursTarget?: boolean;
 }
 
 export function DtrView({
   initialEntries = [],
   initialSettings,
   initialWeekMonday,
+  hasRenderedHoursTarget = true,
 }: DtrViewProps) {
   const confirm = useConfirm();
   const notify = useNotify();
@@ -70,6 +71,11 @@ export function DtrView({
   );
   const [entries, setEntries] = useState<DtrEntryData[]>(initialEntries);
   const [activeTab, setActiveTab] = useState<"week" | "month">("week");
+
+  // Keep entries synchronized when server revalidates initialEntries
+  React.useEffect(() => {
+    setEntries(initialEntries);
+  }, [initialEntries]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,6 +100,7 @@ export function DtrView({
     const workedMinutes = calculateWorkedMinutes({
       timeInMinutes: entry.timeInMinutes,
       timeOutMinutes: entry.timeOutMinutes,
+      breaks: entry.breaks,
       lunchMinutesApplied: entry.lunchMinutesApplied,
     });
     return { ...entry, workedMinutes };
@@ -115,12 +122,17 @@ export function DtrView({
     const worked = calculateWorkedMinutes({
       timeInMinutes: curr.timeInMinutes,
       timeOutMinutes: curr.timeOutMinutes,
+      breaks: curr.breaks,
       lunchMinutesApplied: curr.lunchMinutesApplied,
     });
     return acc + worked;
   }, 0);
 
   const handleOpenAdd = (date?: string) => {
+    if (!hasRenderedHoursTarget) {
+      setActionError("Please set your rendered-hours target on the Dashboard before logging shifts.");
+      return;
+    }
     setEntryToEdit(null);
     setModalDate(date ?? (selectedMonday <= todayStr && todayStr <= selectedSunday ? todayStr : selectedMonday));
     setIsModalOpen(true);
@@ -144,7 +156,12 @@ export function DtrView({
 
   const handleDelete = async (id: string) => {
     const entry = entries.find((item) => item.id === id);
-    if (!entry || !(await confirm({ title: "Delete shift?", description: `Delete the ${formatDateDisplay(entry.workDate)} shift (${formatMinutesToTimeString(entry.timeInMinutes)} – ${formatMinutesToTimeString(entry.timeOutMinutes)})? This cannot be undone.`, confirmLabel: "Delete shift", variant: "destructive" }))) return;
+    if (!entry || !(await confirm({
+      title: "Delete shift?",
+      description: `Delete the ${formatDateDisplay(entry.workDate)} shift (${formatMinutesToTimeString(entry.timeInMinutes)} – ${entry.timeOutMinutes !== null ? formatMinutesToTimeString(entry.timeOutMinutes) : "In Progress"})? This cannot be undone.`,
+      confirmLabel: "Delete shift",
+      variant: "destructive",
+    }))) return;
     setActionError(null);
     setDeletingId(id);
 
@@ -180,11 +197,35 @@ export function DtrView({
           </p>
         </div>
 
-        <Button onClick={() => handleOpenAdd()} className="gap-2 shrink-0">
+        <Button
+          onClick={() => handleOpenAdd()}
+          disabled={!hasRenderedHoursTarget}
+          title={!hasRenderedHoursTarget ? "Set your rendered-hours target on the Dashboard first" : undefined}
+          className="gap-2 shrink-0"
+        >
           <Plus className="h-4 w-4" />
           <span>New Entry</span>
         </Button>
       </div>
+
+      {/* Target Gate Alert */}
+      {!hasRenderedHoursTarget && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="p-4 rounded-xl border border-warning/40 bg-warning/10 text-warning flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>Shift logging is disabled. You must set your required rendered-hours target on the Dashboard first.</span>
+          </div>
+          <Link href="/dashboard">
+            <Button size="sm" variant="outline" className="border-warning/40 hover:bg-warning/20 text-warning shrink-0">
+              Set Target on Dashboard
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Global Action Error */}
       {actionError && (
@@ -254,24 +295,26 @@ export function DtrView({
           </CardContent>
         </Card>
 
-        {/* Lunch Setting Snapshot */}
+        {/* OJT Target / Break System Card */}
         <Card className="shadow-xs">
           <CardHeader className="pb-1.5 pt-4 px-4">
             <CardDescription className="text-[11px] uppercase font-bold tracking-wider">
-              Lunch Deduction
+              Training Target
             </CardDescription>
             <CardTitle className="text-base font-bold text-foreground flex items-center gap-1.5">
-              <Utensils className="h-4 w-4 text-primary" />
+              <Clock className="h-4 w-4 text-primary" />
               <span>
-                {initialSettings?.lunchDeductionEnabled
-                  ? `${initialSettings.lunchBreakMinutes}m Snapshot`
-                  : "Deduction Off"}
+                {initialSettings?.renderedHoursTarget
+                  ? `${initialSettings.renderedHoursTarget} hrs Required`
+                  : "Target Required"}
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
             <p className="text-xs text-muted-foreground">
-              Applied automatically when creating new shifts.
+              {initialSettings?.renderedHoursTarget
+                ? "Shifts log clock-in, clock-out, and manual break lists."
+                : "Configure target hours to log shifts."}
             </p>
           </CardContent>
         </Card>
@@ -405,20 +448,26 @@ export function DtrView({
                     {/* Shift Details or Empty State */}
                     {entry ? (
                       <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
-                        {/* Time In / Out / Lunch */}
+                        {/* Time In / Out / Breaks */}
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
                           <span className="font-semibold text-foreground font-mono bg-card px-2.5 py-1 rounded-lg border border-border">
                             {formatMinutesToTimeString(entry.timeInMinutes)}
                           </span>
                           <span className="text-muted-foreground">to</span>
                           <span className="font-semibold text-foreground font-mono bg-card px-2.5 py-1 rounded-lg border border-border">
-                            {formatMinutesToTimeString(entry.timeOutMinutes)}
+                            {entry.timeOutMinutes !== null
+                              ? formatMinutesToTimeString(entry.timeOutMinutes)
+                              : "In Progress"}
                           </span>
-                          {entry.lunchMinutesApplied > 0 && (
+                          {entry.breaks && entry.breaks.length > 0 ? (
+                            <Badge variant="outline" className="text-[10px] font-mono">
+                              -{entry.breaks.reduce((sum, b) => sum + b.durationMinutes, 0)}m breaks
+                            </Badge>
+                          ) : entry.lunchMinutesApplied > 0 ? (
                             <Badge variant="outline" className="text-[10px] font-mono">
                               -{entry.lunchMinutesApplied}m lunch
                             </Badge>
-                          )}
+                          ) : null}
                         </div>
 
                         {/* Net Worked Time */}
@@ -475,8 +524,9 @@ export function DtrView({
                         <Button
                           variant="ghost"
                           size="sm"
+                          disabled={!hasRenderedHoursTarget}
                           onClick={() => handleOpenAdd(dateStr)}
-                          className="h-8 text-xs gap-1.5 border border-dashed border-border hover:border-solid hover:bg-card"
+                          className="h-8 text-xs gap-1.5 border border-dashed border-border hover:border-solid hover:bg-card disabled:opacity-50"
                         >
                           <Plus className="h-3.5 w-3.5" />
                           <span>Log Shift</span>
@@ -537,13 +587,21 @@ export function DtrView({
                               {formatMinutesToTimeString(e.timeInMinutes)}
                             </td>
                             <td className="py-2.5 font-mono">
-                              {formatMinutesToTimeString(e.timeOutMinutes)}
+                              {e.timeOutMinutes !== null
+                                ? formatMinutesToTimeString(e.timeOutMinutes)
+                                : "In Progress"}
                             </td>
                             <td className="py-2.5 font-mono text-muted-foreground">
-                              {e.lunchMinutesApplied > 0 ? `${e.lunchMinutesApplied}m` : "None"}
+                              {e.breaks && e.breaks.length > 0
+                                ? `${e.breaks.reduce((sum, b) => sum + b.durationMinutes, 0)}m`
+                                : e.lunchMinutesApplied > 0
+                                ? `${e.lunchMinutesApplied}m snapshot`
+                                : "None"}
                             </td>
                             <td className="py-2.5 font-mono font-bold text-right text-foreground">
-                              {formatWorkedHoursAndMinutes(worked)}
+                              {e.timeOutMinutes !== null
+                                ? formatWorkedHoursAndMinutes(worked)
+                                : "In Progress"}
                             </td>
                           </tr>
                         );
@@ -571,22 +629,21 @@ export function DtrView({
       <div className="flex items-start gap-3 rounded-2xl border border-border bg-card/60 p-4 text-xs text-muted-foreground shadow-xs">
         <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
         <div className="leading-relaxed">
-          <span className="font-semibold text-foreground">Acceptance Rule Verified:</span> Logging{" "}
-          <strong className="text-foreground">8:30 AM</strong> to{" "}
-          <strong className="text-foreground">6:30 PM</strong> with a{" "}
-          <strong className="text-foreground">60m</strong> lunch deduction calculates to exactly{" "}
-          <strong className="text-foreground font-mono">9h 00m (9.00 decimal hours)</strong>.
+          <span className="font-semibold text-foreground">Phase 2 Rule Verified:</span> Shifts
+          clock in first with time in, and clock out with manual categorized breaks. Deductions recompute live,
+          and historical records retain snapshot deductions.
         </div>
       </div>
 
       {/* DTR Modal Dialog */}
       <DtrModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEntryToEdit(null);
+        }}
         defaultDate={modalDate}
         entryToEdit={entryToEdit}
-        defaultLunchMinutes={initialSettings?.lunchBreakMinutes ?? 60}
-        lunchEnabled={initialSettings?.lunchDeductionEnabled ?? true}
         onEntrySaved={handleEntrySaved}
       />
     </div>

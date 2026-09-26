@@ -3,21 +3,42 @@
  * No I/O or external side-effects.
  */
 
+export interface BreakDurationItem {
+  durationMinutes: number;
+}
+
 export interface WorkTimeCalculationInput {
   timeInMinutes: number;
-  timeOutMinutes: number;
-  lunchMinutesApplied: number;
+  timeOutMinutes: number | null;
+  breaks?: BreakDurationItem[] | null;
+  lunchMinutesApplied?: number;
 }
 
 /**
  * Calculates net worked minutes for a single day entry.
- * Returns 0 if timeOut is not greater than timeIn or if lunch exceeds shift.
+ * Deducts sum of manual breaks. If no breaks exist, falls back to historical lunchMinutesApplied.
+ * Returns 0 if timeOut is null, not greater than timeIn, or if deductions exceed shift.
  */
 export function calculateWorkedMinutes(input: WorkTimeCalculationInput): number {
-  const { timeInMinutes, timeOutMinutes, lunchMinutesApplied } = input;
-  if (timeOutMinutes <= timeInMinutes) return 0;
+  const { timeInMinutes, timeOutMinutes, breaks, lunchMinutesApplied = 0 } = input;
+  if (timeOutMinutes === null || timeOutMinutes <= timeInMinutes) return 0;
+
   const rawMinutes = timeOutMinutes - timeInMinutes;
-  const netMinutes = rawMinutes - Math.max(0, lunchMinutesApplied);
+
+  // Determine total break deduction:
+  // If breaks are explicitly defined (even empty []), use sum of breaks (default 0).
+  // If breaks is null/undefined and lunchMinutesApplied > 0, fallback to historical lunch snapshot.
+  let totalDeductionMinutes = 0;
+  if (breaks !== undefined && breaks !== null) {
+    totalDeductionMinutes = breaks.reduce(
+      (sum, b) => sum + Math.max(0, b.durationMinutes),
+      0
+    );
+  } else {
+    totalDeductionMinutes = Math.max(0, lunchMinutesApplied);
+  }
+
+  const netMinutes = rawMinutes - totalDeductionMinutes;
   return Math.max(0, netMinutes);
 }
 
