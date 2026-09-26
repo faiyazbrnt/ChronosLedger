@@ -265,5 +265,18 @@
   - Portalized `SettingsModal`, `DtrModal`, and `DailyActivityReportModal` directly into `document.body` via `createPortal(..., document.body)` with `mounted` verification, body scroll locking (`overflow = "hidden"`), and backdrop `z-[100]`.
 - **Verification:** Modals now render completely centered in the browser window with full visibility, zero clipping, and clean body scroll prevention. All quality gates pass.
 
+---
+
+## Vercel Serverless Connection Starvation & P2024 Fix
+- **Issue:** On Vercel, opening `/calendar` or `/dashboard` failed with `PrismaClientKnownRequestError [P2024]: Timed out fetching a new connection from the connection pool (Current connection pool timeout: 10, connection limit: 1)`.
+- **Root Cause & Fix:**
+  - `connection_limit=1` was configured on Vercel's `DATABASE_URL` per an outdated serverless guide. In Next.js App Router, concurrent queries (`Promise.all` in layout/pages, `NotificationsMenu` Server Action on mount, link prefetching) were serialized into a single connection queue. The wait time exceeded the default 10s pool timeout, failing with P2024.
+  - Updated `src/lib/prisma.ts` with runtime URL optimization: intercepts `connection_limit=1` or `connection_limit=2` and upgrades to `connection_limit=10`, and guarantees `pool_timeout=30`.
+  - Added graceful try/catch error handling in `src/features/notifications/actions/notification-actions.ts` to avoid uncaught 500s.
+  - Added `take: 50` query limit in `getNotifications`.
+  - Documented the exact Supabase transaction pooler URL parameters in `.env.example` and `README.md`.
+- **Verification:** All 5 quality gates verified green (`typecheck`, `lint`, 80/80 `test`, `db:generate`, `build`).
+
+
 
 
