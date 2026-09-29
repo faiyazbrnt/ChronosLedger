@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePresence } from "@/components/ui/use-presence";
 import { getTodayDateString, formatDateDisplay } from "@/lib/date";
 import { formatMinorUnits, parseMajorToMinor } from "@/lib/money";
 import { createExpenseAction, updateExpenseAction } from "../actions/budget-actions";
@@ -53,6 +54,7 @@ export function ExpenseModal({
   currency,
   onExpenseSaved,
 }: ExpenseModalProps) {
+  const { present, exiting } = usePresence(isOpen);
   const [spentOn, setSpentOn] = useState(defaultDate ?? getTodayDateString());
   const [category, setCategory] = useState<ExpenseCategory>("FOOD");
   const [amountStr, setAmountStr] = useState("");
@@ -86,7 +88,7 @@ export function ExpenseModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, isPending, onClose]);
 
-  if (!isOpen) return null;
+  if (!present) return null;
 
   const parsedMinor = parseMajorToMinor(amountStr);
   const isValidAmount = parsedMinor !== null && parsedMinor > 0;
@@ -157,10 +159,10 @@ export function ExpenseModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="expense-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm motion-modal-backdrop ${exiting ? "motion-exiting" : ""}`}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl space-y-6 relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl space-y-6 relative motion-modal-panel max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

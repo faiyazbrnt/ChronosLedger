@@ -56,6 +56,8 @@ import { deleteExpenseAction } from "../actions/budget-actions";
 import { notifyActivityChanged } from "@/lib/activity-client";
 import { ExpenseModal } from "./expense-modal";
 import { AllowanceModal } from "./allowance-modal";
+import { AnimatedNumber } from "@/components/ui/animated-number";
+import { AnimatedProgress } from "@/components/ui/animated-progress";
 
 const CategoryChart = dynamic(
   () => import("./category-chart").then((mod) => mod.CategoryChart),
@@ -248,7 +250,7 @@ export function BudgetView({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 max-w-5xl">
+    <div className="space-y-8 motion-page max-w-5xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -371,7 +373,7 @@ export function BudgetView({
       {activeTab === "this-week" && (
         <div className="space-y-6">
           {/* KPI Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 motion-stagger">
             {/* Allowance Card */}
             <Card className="shadow-xs">
               <CardHeader className="pb-1.5 pt-4 px-4">
@@ -388,7 +390,7 @@ export function BudgetView({
                   </Badge>
                 </div>
                 <CardTitle className="text-2xl sm:text-3xl font-black text-foreground font-mono">
-                  {formatMinorUnits(cycleAmountMinor, currency)}
+                  <AnimatedNumber value={cycleAmountMinor} format={(value) => formatMinorUnits(Math.round(value), currency)} />
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-0">
@@ -409,7 +411,7 @@ export function BudgetView({
                   Total Spent
                 </CardDescription>
                 <CardTitle className="text-2xl sm:text-3xl font-black text-foreground font-mono">
-                  {formatMinorUnits(weekTotalSpentMinor, currency)}
+                  <AnimatedNumber value={weekTotalSpentMinor} format={(value) => formatMinorUnits(Math.round(value), currency)} />
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-0">
@@ -442,9 +444,7 @@ export function BudgetView({
                       : "text-foreground"
                   }`}
                 >
-                  {remainingMinor < 0
-                    ? `-${formatMinorUnits(Math.abs(remainingMinor), currency)}`
-                    : formatMinorUnits(remainingMinor, currency)}
+                  <AnimatedNumber value={remainingMinor} format={(value) => value < 0 ? `-${formatMinorUnits(Math.abs(Math.round(value)), currency)}` : formatMinorUnits(Math.round(value), currency)} />
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-0">
@@ -496,7 +496,7 @@ export function BudgetView({
                   }
                   className="font-mono text-xs w-fit"
                 >
-                  {percentUsed.toFixed(0)}% Used
+                  <AnimatedNumber value={percentUsed} format={(value) => `${value.toFixed(0)}%`} /> Used
                 </Badge>
               </div>
 
@@ -511,15 +511,15 @@ export function BudgetView({
 
             <CardContent className="px-4 sm:px-6 pb-5 pt-1 space-y-2">
               <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
-                <div
-                  className={`h-3 rounded-full transition-all duration-500 ${
+                <AnimatedProgress
+                  className={`h-3 rounded-full ${
                     status === "OVER_BUDGET"
                       ? "bg-destructive"
                       : status === "NEAR_LIMIT"
                       ? "bg-warning"
                       : "bg-primary"
                   }`}
-                  style={{ width: `${Math.min(100, Math.max(0, percentUsed))}%` }}
+                  value={percentUsed}
                 />
               </div>
               <div className="flex justify-between text-xs text-muted-foreground font-mono pt-0.5">
@@ -668,14 +668,14 @@ export function BudgetView({
       {activeTab === "monthly" && (
         <div className="space-y-6">
           {/* Monthly KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 motion-stagger">
             <Card className="shadow-xs">
               <CardHeader className="pb-1.5 pt-4 px-4">
                 <CardDescription className="text-[11px] uppercase font-bold tracking-wider">
                   Monthly Total Spent
                 </CardDescription>
                 <CardTitle className="text-2xl sm:text-3xl font-black text-foreground font-mono">
-                  {formatMinorUnits(monthTotalSpentMinor, currency)}
+                  <AnimatedNumber value={monthTotalSpentMinor} format={(value) => formatMinorUnits(Math.round(value), currency)} />
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-0">
@@ -691,10 +691,7 @@ export function BudgetView({
                   Daily Average Spent
                 </CardDescription>
                 <CardTitle className="text-2xl sm:text-3xl font-black text-foreground font-mono">
-                  {formatMinorUnits(
-                    monthTotalSpentMinor > 0 ? Math.round(monthTotalSpentMinor / 30) : 0,
-                    currency
-                  )}
+                  <AnimatedNumber value={monthTotalSpentMinor > 0 ? Math.round(monthTotalSpentMinor / 30) : 0} format={(value) => formatMinorUnits(Math.round(value), currency)} />
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-0">

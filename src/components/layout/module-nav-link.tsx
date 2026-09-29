@@ -11,6 +11,7 @@ interface ModuleNavLinkProps {
   isActive: boolean;
   compact?: boolean;
   collapsed?: boolean;
+  slidingIndicator?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
@@ -103,6 +104,7 @@ export function ModuleNavLink({
   isActive,
   compact = false,
   collapsed = false,
+  slidingIndicator = false,
   onClick,
 }: ModuleNavLinkProps) {
   let className = "";
@@ -111,15 +113,15 @@ export function ModuleNavLink({
       isActive ? "text-emerald-400" : "text-slate-400 hover:text-white"
     }`;
   } else if (collapsed) {
-    className = `group flex items-center justify-center h-11 w-11 mx-auto rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+    className = `group relative flex items-center justify-center h-11 w-11 mx-auto rounded-xl motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
       isActive
-        ? "bg-white/[0.12] text-white font-semibold shadow-xs border border-white/15 [&_svg]:text-emerald-400"
+        ? slidingIndicator ? "text-white font-semibold [&_svg]:text-emerald-400" : "bg-white/[0.12] text-white font-semibold shadow-xs border border-white/15 [&_svg]:text-emerald-400"
         : "text-slate-400 hover:text-white hover:bg-white/[0.07] active:scale-[0.95]"
     }`;
   } else {
-    className = `group flex items-center gap-3.5 px-3.5 py-2.5 text-sm font-medium rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+    className = `group relative flex items-center gap-3.5 px-3.5 py-2.5 h-11 text-sm font-medium rounded-xl motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
       isActive
-        ? "bg-white/[0.12] text-white font-semibold shadow-xs border border-white/15 backdrop-blur-xs [&_svg]:text-emerald-400"
+        ? slidingIndicator ? "text-white font-semibold [&_svg]:text-emerald-400" : "bg-white/[0.12] text-white font-semibold shadow-xs border border-white/15 backdrop-blur-xs [&_svg]:text-emerald-400"
         : "text-slate-400 hover:text-white hover:bg-white/[0.07] active:scale-[0.99]"
     }`;
   }

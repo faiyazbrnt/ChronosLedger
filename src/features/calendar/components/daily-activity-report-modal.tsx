@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, FileText, Loader2, Clock, CheckCircle2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePresence } from "@/components/ui/use-presence";
 import { formatMinutesToTimeString } from "@/lib/date";
 
 export interface ActivityReportData {
@@ -40,6 +41,7 @@ export function DailyActivityReportModal({
   onSave,
   onSuccess,
 }: DailyActivityReportModalProps) {
+  const { present, exiting } = usePresence(isOpen);
   const [activity, setActivity] = useState<string>("");
   const [activityDescription, setActivityDescription] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
@@ -72,7 +74,7 @@ export function DailyActivityReportModal({
     };
   }, [isOpen]);
 
-  if (!isOpen || !entry || !mounted) return null;
+  if (!present || !entry || !mounted) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -115,10 +117,10 @@ export function DailyActivityReportModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm motion-modal-backdrop ${exiting ? "motion-exiting" : ""}`}
     >
       <div
-        className="w-full max-w-lg bg-background rounded-2xl border border-border shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col"
+        className="w-full max-w-lg bg-background rounded-2xl border border-border shadow-2xl overflow-hidden motion-modal-panel max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

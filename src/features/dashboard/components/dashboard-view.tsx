@@ -24,6 +24,9 @@ import { useNotify } from "@/components/ui";
 import { formatMinorUnits } from "@/lib/money";
 import { formatDateDisplay } from "@/lib/date";
 import { RenderedHoursModal } from "./rendered-hours-modal";
+import { AnimatedNumber } from "@/components/ui/animated-number";
+import { AnimatedProgress } from "@/components/ui/animated-progress";
+import { useListMotion } from "@/components/ui/use-list-motion";
 import type { DashboardData, DashboardExpenseCategory, RenderedHoursSummary } from "../types";
 
 const CATEGORY_STYLES: Record<
@@ -87,6 +90,8 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
   const { user, settings, currentWeek, weeklyBudget, recentShifts, recentExpenses } = data;
   const currency = settings.currency;
   const notify = useNotify();
+  const shiftsListRef = useListMotion();
+  const expensesListRef = useListMotion();
 
   const [renderedHours, setRenderedHours] = useState<RenderedHoursSummary>(data.renderedHours);
   const [isTargetModalOpen, setIsTargetModalOpen] = useState<boolean>(false);
@@ -137,7 +142,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-8 motion-page">
       {/* Target Modal */}
       <RenderedHoursModal
         isOpen={isTargetModalOpen}
@@ -281,7 +286,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
       )}
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 motion-stagger">
         {/* Rendered Hours KPI Card (OJT Progress Tracking) */}
         <Card className="hover:shadow-md transition-shadow relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -295,7 +300,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
           <CardContent className="space-y-3">
             <div className="flex items-baseline justify-between">
               <div className="text-3xl font-black tracking-tight text-foreground">
-                {renderedHours.formattedTotalHours}
+                <AnimatedNumber value={renderedHours.totalWorkedMinutes} format={(minutes) => `${Math.floor(Math.round(minutes) / 60)}h ${String(Math.round(minutes) % 60).padStart(2, "0")}m`} />
                 {renderedHours.hasTarget && (
                   <span className="text-lg font-bold text-muted-foreground ml-1">
                     / {renderedHours.targetHours}h
@@ -304,7 +309,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
               </div>
               {renderedHours.hasTarget ? (
                 <span className="text-xs font-mono font-bold text-primary">
-                  {renderedHours.percentTarget}%
+                  <AnimatedNumber value={renderedHours.percentTarget} format={(value) => `${Math.round(value)}%`} />
                 </span>
               ) : (
                 <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-500/40">
@@ -328,10 +333,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                 </span>
               </div>
               <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, renderedHours.percentTarget)}%` }}
-                />
+                <AnimatedProgress className="h-full bg-primary rounded-full" value={renderedHours.percentTarget} />
               </div>
             </div>
 
@@ -343,7 +345,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
               <button
                 type="button"
                 onClick={() => setIsTargetModalOpen(true)}
-                className="text-primary hover:text-primary/80 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                className="text-primary hover:text-primary/80 font-semibold flex items-center gap-1 cursor-pointer motion-press"
               >
                 <Edit3 className="h-3 w-3" />
                 <span>{renderedHours.hasTarget ? "Edit target" : "Set target"}</span>
@@ -373,7 +375,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                     : "text-primary"
                 }`}
               >
-                {formatMinorUnits(weeklyBudget.remainingMinor, currency)}
+                <AnimatedNumber value={weeklyBudget.remainingMinor} format={(value) => formatMinorUnits(Math.round(value), currency)} />
               </div>
               {weeklyBudget.cycleLabel ? (
                 <Badge variant="outline" className="text-[10px] font-mono border-primary/30">
@@ -393,18 +395,18 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                   Spent {formatMinorUnits(weeklyBudget.totalSpentMinor, currency)} of{" "}
                   {formatMinorUnits(weeklyBudget.allowanceMinor, currency)}
                 </span>
-                <span className="font-semibold text-foreground">{weeklyBudget.percentUsed}%</span>
+                <span className="font-semibold text-foreground"><AnimatedNumber value={weeklyBudget.percentUsed} format={(value) => `${Math.round(value)}%`} /></span>
               </div>
               <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
+                <AnimatedProgress
+                  className={`h-full rounded-full ${
                     isOverBudget
                       ? "bg-destructive"
                       : isNearLimit
                       ? "bg-warning"
                       : "bg-primary"
                   }`}
-                  style={{ width: `${Math.min(100, weeklyBudget.percentUsed)}%` }}
+                  value={weeklyBudget.percentUsed}
                 />
               </div>
             </div>
@@ -488,7 +490,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
       </div>
 
       {/* Recent Activity Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 motion-stagger">
         {/* Recent DTR Shifts */}
         <Card className="flex flex-col">
           <CardHeader className="pb-3">
@@ -499,17 +501,18 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                   Latest shifts recorded toward your rendered hours target
                 </CardDescription>
               </div>
-              <Link href="/dtr" className="text-xs font-semibold text-link hover:underline flex items-center gap-0.5">
+              <Link href="/dtr" className="text-xs font-semibold text-link hover:underline flex items-center gap-0.5 motion-press">
                 View all <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col justify-between">
             {recentShifts.length > 0 ? (
-              <div className="divide-y divide-border/60 border rounded-xl overflow-hidden bg-background/50">
+              <div ref={shiftsListRef} className="divide-y divide-border/60 border rounded-xl overflow-hidden bg-background/50 motion-list">
                 {recentShifts.map((shift) => (
                   <div
                     key={shift.id}
+                    data-motion-id={shift.id}
                     className="p-3.5 flex items-center justify-between hover:bg-muted/30 transition-colors"
                   >
                     <div className="space-y-0.5">
@@ -572,19 +575,20 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                   Latest tracked spending across your budget cycle
                 </CardDescription>
               </div>
-              <Link href="/budget" className="text-xs font-semibold text-link hover:underline flex items-center gap-0.5">
+              <Link href="/budget" className="text-xs font-semibold text-link hover:underline flex items-center gap-0.5 motion-press">
                 View all <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col justify-between">
             {recentExpenses.length > 0 ? (
-              <div className="divide-y divide-border/60 border rounded-xl overflow-hidden bg-background/50">
+              <div ref={expensesListRef} className="divide-y divide-border/60 border rounded-xl overflow-hidden bg-background/50 motion-list">
                 {recentExpenses.map((exp) => {
                   const style = CATEGORY_STYLES[exp.category] ?? CATEGORY_STYLES.OTHER;
                   return (
                     <div
                       key={exp.id}
+                      data-motion-id={exp.id}
                       className="p-3.5 flex items-center justify-between hover:bg-muted/30 transition-colors"
                     >
                       <div className="space-y-0.5">
