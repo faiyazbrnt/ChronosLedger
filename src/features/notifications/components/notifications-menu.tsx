@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { Bell, Check, Trash2, X, AlertCircle } from "lucide-react";
 import { useConfirm, useNotify } from "@/components/ui";
-import { usePresence } from "@/components/ui/use-presence";
 import { createClient } from "@/lib/supabase/client";
+import { motion, AnimatePresence } from "motion/react";
+import { shouldSkipMotion } from "@/lib/motion";
 import {
   clearNotificationsAction,
   getNotificationsAction,
@@ -26,7 +28,7 @@ interface NotificationsMenuProps {
 
 export function NotificationsMenu({ userId: initialUserId }: NotificationsMenuProps) {
   const [open, setOpen] = React.useState(false);
-  const { present: menuPresent, exiting: menuExiting } = usePresence(open);
+  const [mounted, setMounted] = React.useState(false);
   const [items, setItems] = React.useState<NotificationItem[]>([]);
   const [filter, setFilter] = React.useState<"all" | "unread">("all");
   const [loading, setLoading] = React.useState(false);
@@ -65,6 +67,36 @@ export function NotificationsMenu({ userId: initialUserId }: NotificationsMenuPr
   const toggleOpen = () => {
     setOpen((prev) => !prev);
   };
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.dispatchEvent(
+        new CustomEvent("chronos:notifications-popover", { detail: { open } })
+      );
+      document.documentElement.dataset.notificationsOpen = open ? "true" : "false";
+    } catch {
+      // Ignore
+    }
+    return () => {
+      if (open) {
+        document.documentElement.dataset.notificationsOpen = "false";
+      }
+    };
+  }, [open]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, close]);
 
   // Initial fetch on component mount + Supabase Realtime channel subscription
   React.useEffect(() => {
@@ -308,25 +340,46 @@ export function NotificationsMenu({ userId: initialUserId }: NotificationsMenuPr
         )}
       </button>
 
-      {/* Dropdown Overlay with Dimming and Anchored Popover */}
-      {menuPresent && (
-        <>
-          {/* Dimming Backdrop Overlay */}
-          <div
-            className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-[1px] motion-modal-backdrop ${menuExiting ? "motion-exiting" : ""}`}
-            onClick={close}
-            aria-hidden="true"
-          />
+      {/* Portalized Overlay with Dimming and Motion Popover */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {open && (
+              <>
+                {/* Dimming Backdrop Overlay */}
+                <motion.div
+                  key="notifications-backdrop"
+                  initial={shouldSkipMotion() ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-xs motion-modal-backdrop"
+                  onClick={close}
+                  aria-hidden="true"
+                />
 
-          {/* Anchored Notification Panel Dropdown */}
-          <section
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="notifications-title"
-            className={`absolute right-0 top-full mt-2 z-50 flex max-h-[calc(100vh-5.5rem)] w-[calc(100vw-2rem)] max-w-[384px] sm:w-96 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl motion-popover ${menuExiting ? "motion-exiting" : ""}`}
-            onMouseDown={(event) => event.stopPropagation()}
-          >
+                {/* Portalized Notification Panel Popover */}
+                <motion.section
+                  key="notifications-panel"
+                  ref={panelRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="notifications-title"
+                  initial={
+                    shouldSkipMotion()
+                      ? false
+                      : { opacity: 0, scale: 0.95, y: -8 }
+                  }
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={
+                    shouldSkipMotion()
+                      ? { opacity: 0 }
+                      : { opacity: 0, scale: 0.96, y: -6 }
+                  }
+                  transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                  className="fixed top-3 right-4 sm:right-6 md:right-8 z-[100] flex max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-[384px] sm:w-96 flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl motion-popover"
+                  onMouseDown={(event) => event.stopPropagation()}
+                >
             {/* Header */}
             <header className="flex items-center justify-between border-b border-border p-4">
               <div>
@@ -490,9 +543,12 @@ export function NotificationsMenu({ userId: initialUserId }: NotificationsMenuPr
                 Clear all
               </button>
             </footer>
-          </section>
-        </>
-      )}
+          </motion.section>
+              </>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </div>
   );
 }

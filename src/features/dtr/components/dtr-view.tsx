@@ -561,54 +561,100 @@ export function DtrView({
               </div>
 
               {monthEntries.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-wider">
-                        <th className="pb-2">Date</th>
-                        <th className="pb-2">Time In</th>
-                        <th className="pb-2">Time Out</th>
-                        <th className="pb-2">Lunch Deducted</th>
-                        <th className="pb-2 text-right">Worked Time</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/60">
-                      {monthEntries.map((e) => {
-                        const worked = calculateWorkedMinutes({
-                          timeInMinutes: e.timeInMinutes,
-                          timeOutMinutes: e.timeOutMinutes,
-                          lunchMinutesApplied: e.lunchMinutesApplied,
-                        });
-                        return (
-                          <tr key={e.id} className="hover:bg-muted/20">
-                            <td className="py-2.5 font-mono font-medium text-foreground">
-                              {formatDateDisplay(e.workDate)}
-                            </td>
-                            <td className="py-2.5 font-mono">
-                              {formatMinutesToTimeString(e.timeInMinutes)}
-                            </td>
-                            <td className="py-2.5 font-mono">
-                              {e.timeOutMinutes !== null
-                                ? formatMinutesToTimeString(e.timeOutMinutes)
-                                : "In Progress"}
-                            </td>
-                            <td className="py-2.5 font-mono text-muted-foreground">
-                              {e.breaks && e.breaks.length > 0
-                                ? `${e.breaks.reduce((sum, b) => sum + b.durationMinutes, 0)}m`
-                                : e.lunchMinutesApplied > 0
-                                ? `${e.lunchMinutesApplied}m snapshot`
-                                : "None"}
-                            </td>
-                            <td className="py-2.5 font-mono font-bold text-right text-foreground">
-                              {e.timeOutMinutes !== null
-                                ? formatWorkedHoursAndMinutes(worked)
-                                : "In Progress"}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <div className="space-y-4">
+                  {/* Desktop Table (hidden on mobile) */}
+                  <div className="hidden md:block overflow-x-auto rounded-xl border border-border bg-card">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider">
+                          <th className="px-4 py-3 font-semibold">Date</th>
+                          <th className="px-4 py-3 font-semibold">Time In</th>
+                          <th className="px-4 py-3 font-semibold">Time Out</th>
+                          <th className="px-4 py-3 font-semibold">Lunch Deducted</th>
+                          <th className="px-4 py-3 font-semibold text-right">Worked Time</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/60">
+                        {monthEntries.map((e) => {
+                          const worked = calculateWorkedMinutes({
+                            timeInMinutes: e.timeInMinutes,
+                            timeOutMinutes: e.timeOutMinutes,
+                            breaks: e.breaks,
+                            lunchMinutesApplied: e.lunchMinutesApplied,
+                          });
+                          return (
+                            <tr key={e.id} className="hover:bg-muted/20 transition-colors">
+                              <td className="px-4 py-3 font-mono font-medium text-foreground">
+                                {formatDateDisplay(e.workDate)}
+                              </td>
+                              <td className="px-4 py-3 font-mono">
+                                {formatMinutesToTimeString(e.timeInMinutes)}
+                              </td>
+                              <td className="px-4 py-3 font-mono">
+                                {e.timeOutMinutes !== null
+                                  ? formatMinutesToTimeString(e.timeOutMinutes)
+                                  : "In Progress"}
+                              </td>
+                              <td className="px-4 py-3 font-mono text-muted-foreground">
+                                {e.breaks && e.breaks.length > 0
+                                  ? `${e.breaks.reduce((sum, b) => sum + b.durationMinutes, 0)}m`
+                                  : e.lunchMinutesApplied > 0
+                                  ? `${e.lunchMinutesApplied}m snapshot`
+                                  : "None"}
+                              </td>
+                              <td className="px-4 py-3 font-mono font-bold text-right text-foreground">
+                                {e.timeOutMinutes !== null
+                                  ? formatWorkedHoursAndMinutes(worked)
+                                  : "In Progress"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Mobile Card List (hidden on desktop) */}
+                  <div className="grid grid-cols-1 gap-3 md:hidden">
+                    {monthEntries.map((e) => {
+                      const worked = calculateWorkedMinutes({
+                        timeInMinutes: e.timeInMinutes,
+                        timeOutMinutes: e.timeOutMinutes,
+                        breaks: e.breaks,
+                        lunchMinutesApplied: e.lunchMinutesApplied,
+                      });
+                      return (
+                        <div key={e.id} className="p-4 rounded-xl border border-border/80 bg-card/60 flex flex-col gap-3 shadow-xs">
+                          <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                            <span className="font-medium text-foreground text-sm">{formatDateDisplay(e.workDate)}</span>
+                            <span className="font-mono font-bold text-foreground text-sm">
+                              {e.timeOutMinutes !== null ? formatWorkedHoursAndMinutes(worked) : "In Progress"}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground block mb-0.5 text-[10px] uppercase tracking-wider font-semibold">Time In</span>
+                              <span className="font-mono text-foreground font-medium">{formatMinutesToTimeString(e.timeInMinutes)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground block mb-0.5 text-[10px] uppercase tracking-wider font-semibold">Time Out</span>
+                              <span className="font-mono text-foreground font-medium">{e.timeOutMinutes !== null ? formatMinutesToTimeString(e.timeOutMinutes) : "In Progress"}</span>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground block mb-0.5 text-[10px] uppercase tracking-wider font-semibold">Breaks Deducted</span>
+                              <span className="font-mono text-muted-foreground">
+                                {e.breaks && e.breaks.length > 0
+                                  ? `${e.breaks.reduce((sum, b) => sum + b.durationMinutes, 0)}m`
+                                  : e.lunchMinutesApplied > 0
+                                  ? `${e.lunchMinutesApplied}m snapshot`
+                                  : "None"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
                 <div className="p-8 text-center border border-dashed border-border rounded-xl">
@@ -626,15 +672,6 @@ export function DtrView({
         </CardContent>
       </Card>
 
-      {/* Acceptance Rule Verification Callout */}
-      <div className="flex items-start gap-3 rounded-2xl border border-border bg-card/60 p-4 text-xs text-muted-foreground shadow-xs">
-        <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-        <div className="leading-relaxed">
-          <span className="font-semibold text-foreground">Phase 2 Rule Verified:</span> Shifts
-          clock in first with time in, and clock out with manual categorized breaks. Deductions recompute live,
-          and historical records retain snapshot deductions.
-        </div>
-      </div>
 
       {/* DTR Modal Dialog */}
       <DtrModal

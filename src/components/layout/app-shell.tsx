@@ -16,6 +16,8 @@ import { ThemeToggle } from "./theme-toggle";
 import { ModuleNavLink } from "./module-nav-link";
 import { Brand } from "@/components/ui/system-logo";
 import { usePresence } from "@/components/ui/use-presence";
+import { motion } from "motion/react";
+import { shouldSkipMotion } from "@/lib/motion";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -30,7 +32,7 @@ const navItems = [
     icon: LayoutDashboard,
   },
   {
-    name: "DTR",
+    name: "Time Record",
     href: "/dtr",
     icon: Clock,
   },
@@ -50,10 +52,22 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
   const pathname = usePathname();
   const activeNavIndex = navItems.findIndex((item) => pathname === item.href || pathname?.startsWith(`${item.href}/`));
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { present: mobileMenuPresent, exiting: mobileMenuExiting } = usePresence(isMobileMenuOpen);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleNotificationPopover = (e: Event) => {
+      const customEvent = e as CustomEvent<{ open: boolean }>;
+      setIsNotificationsOpen(Boolean(customEvent.detail?.open));
+    };
+    window.addEventListener("chronos:notifications-popover", handleNotificationPopover);
+    return () => {
+      window.removeEventListener("chronos:notifications-popover", handleNotificationPopover);
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -155,7 +169,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
     <div className="min-h-screen flex bg-background text-foreground">
       {/* Desktop Sidebar Navigation (Hidden on mobile) */}
       <aside
-        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 z-50 bg-[#131b21] dark:bg-[#090d11] text-slate-100 border-r border-slate-800/40 dark:border-white/10 shadow-sm motion-sidebar ${
+        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 z-50 bg-[var(--sidebar-bg)] text-[var(--sidebar-fg)] border-r border-[var(--sidebar-border)] shadow-sm motion-sidebar ${
           isCollapsed ? "md:w-[72px]" : "md:w-64"
         }`}
         aria-label="Desktop Navigation"
@@ -164,7 +178,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
         <button
           type="button"
           onClick={toggleSidebar}
-          className="hidden md:flex absolute -right-3.5 top-1/2 z-50 h-7 w-7 items-center justify-center rounded-full border border-slate-700/80 bg-[#131b21] text-slate-300 hover:text-white hover:bg-slate-800 hover:border-emerald-500/50 shadow-md motion-sidebar-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
+          className="hidden md:flex absolute -right-3.5 top-1/2 z-50 h-7 w-7 items-center justify-center rounded-full border border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-fg)] hover:bg-[var(--sidebar-hover-bg)] shadow-md motion-sidebar-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-active-icon)] cursor-pointer"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -178,7 +192,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
         <div className="flex flex-col flex-grow pb-4 overflow-y-auto overflow-x-hidden">
           {/* Brand Header */}
           <div
-            className={`h-[65px] shrink-0 border-b border-white/10 flex items-center motion-sidebar-nav ${
+            className={`h-[65px] shrink-0 border-b border-[var(--sidebar-border)] flex items-center motion-sidebar-nav ${
               isCollapsed ? "justify-center px-0" : "px-6"
             }`}
           >
@@ -186,7 +200,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
               size="lg"
               href="/dashboard"
               hideTitle={isCollapsed}
-              titleClassName="text-white group-hover:text-emerald-300 transition-colors"
+              titleClassName="text-[var(--sidebar-fg)] group-hover:opacity-90 transition-opacity"
             />
           </div>
 
@@ -212,7 +226,15 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
                 />
               );
             })}
-            {activeNavIndex >= 0 && <span className={`motion-active-indicator !mt-0 ${isCollapsed ? "left-2 right-2" : "left-4 right-4"}`} style={{ transform: `translateY(${activeNavIndex * 50}px)` }} aria-hidden="true" />}
+            {activeNavIndex >= 0 && (
+              <span
+                className={`motion-active-indicator !mt-0 ${
+                  isCollapsed ? "left-2 right-2" : "left-4 right-4"
+                }`}
+                style={{ transform: `translateY(${activeNavIndex * 50}px)` }}
+                aria-hidden="true"
+              />
+            )}
           </nav>
         </div>
       </aside>
@@ -223,7 +245,13 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
           isCollapsed ? "md:pl-[72px]" : "md:pl-64"
         }`}
       >
-        <header className="sticky top-0 z-30 hidden h-[65px] items-center justify-end bg-background/80 px-4 sm:px-6 md:px-8 backdrop-blur-md md:flex">
+        <header
+          className={`sticky top-0 z-30 hidden h-[65px] items-center justify-end bg-background/80 px-4 sm:px-6 md:px-8 backdrop-blur-md transition-opacity duration-200 md:flex ${
+            isNotificationsOpen
+              ? "opacity-0 pointer-events-none invisible"
+              : "opacity-100 pointer-events-auto"
+          }`}
+        >
           <div className="flex items-center gap-2">
             {headerActions}
             <ThemeToggle />
@@ -231,7 +259,13 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
           </div>
         </header>
         {/* Mobile Header (Hidden on Desktop) */}
-        <header className="sticky top-0 z-40 md:hidden flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-md">
+        <header
+          className={`sticky top-0 z-40 md:hidden flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-md transition-opacity duration-200 ${
+            isNotificationsOpen
+              ? "opacity-0 pointer-events-none invisible"
+              : "opacity-100 pointer-events-auto"
+          }`}
+        >
           <button
             ref={menuButtonRef}
             type="button"
@@ -252,7 +286,11 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
         </header>
 
         {mobileMenuPresent && (
-          <div className={`fixed inset-0 z-50 md:hidden ${mobileMenuExiting ? "motion-exiting" : ""}`}>
+          <div
+            className={`fixed inset-0 z-50 md:hidden ${
+              mobileMenuExiting ? "motion-exiting" : ""
+            }`}
+          >
             <button
               type="button"
               className="absolute inset-0 bg-foreground/25 backdrop-blur-[1px] motion-modal-backdrop"
@@ -265,13 +303,17 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
               role="dialog"
               aria-modal="true"
               aria-label="Mobile navigation"
-              className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-slate-800/40 dark:border-white/10 bg-[#131b21] dark:bg-[#090d11] text-slate-100 p-4 shadow-2xl motion-mobile-drawer"
+              className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-fg)] p-4 shadow-2xl motion-mobile-drawer"
             >
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <Brand size="sm" href="/dashboard" titleClassName="text-white group-hover:text-emerald-300 transition-colors" />
+              <div className="flex items-center justify-between border-b border-[var(--sidebar-border)] pb-4">
+                <Brand
+                  size="sm"
+                  href="/dashboard"
+                  titleClassName="text-[var(--sidebar-fg)] group-hover:opacity-90 transition-opacity"
+                />
                 <button
                   type="button"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/10 motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[var(--sidebar-muted)] hover:text-[var(--sidebar-fg)] hover:bg-[var(--sidebar-hover-bg)] motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-active-icon)]"
                   aria-label="Close navigation menu"
                   onClick={closeMobileMenu}
                 >
@@ -295,7 +337,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
                   );
                 })}
               </nav>
-              <div className="mt-auto border-t border-white/10 pt-4">
+              <div className="mt-auto border-t border-[var(--sidebar-border)] pt-4">
                 <ThemeToggle />
               </div>
             </div>
@@ -307,7 +349,14 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
           className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 md:p-8 focus:outline-none"
           tabIndex={-1}
         >
-          <div key={pathname} className="motion-route">{children}</div>
+          <motion.div
+            key={pathname}
+            initial={shouldSkipMotion() ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+          >
+            {children}
+          </motion.div>
         </main>
 
         {/* Mobile Bottom Tab Bar (Touch targets ≥ 44px, sticky bottom) */}

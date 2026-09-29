@@ -179,10 +179,13 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     if (entry.timeOutMinutes !== null) {
       const raw = entry.timeOutMinutes - entry.timeInMinutes;
       let breakDeduction = 0;
-      if (entry.breaks && entry.breaks.length > 0) {
-        breakDeduction = entry.breaks.reduce((sum, b) => sum + b.durationMinutes, 0);
+      if (entry.breaks !== undefined && entry.breaks !== null) {
+        breakDeduction = entry.breaks.reduce(
+          (sum, b) => sum + Math.max(0, b.durationMinutes),
+          0
+        );
       } else {
-        breakDeduction = entry.lunchMinutesApplied;
+        breakDeduction = Math.max(0, entry.lunchMinutesApplied);
       }
       workedMinutes = Math.max(0, raw - breakDeduction);
       const hours = Math.floor(workedMinutes / 60);

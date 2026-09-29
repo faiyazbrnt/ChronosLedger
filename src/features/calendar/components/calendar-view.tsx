@@ -260,14 +260,14 @@ export function CalendarView({
                       : ""
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="rounded-md bg-card/85 px-1.5 py-0.5 text-xs font-mono font-bold text-foreground shadow-xs">
+                  <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-1">
+                    <span className="w-fit rounded-md bg-card/85 px-1.5 py-0.5 text-xs font-mono font-bold text-foreground shadow-xs">
                       {format(day, "d")}
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1">
                       {hasActivity && (
                         <span
-                          className="h-3.5 w-3.5 rounded bg-primary/20 text-primary flex items-center justify-center p-0.5"
+                          className="h-3.5 w-3.5 rounded bg-primary/20 text-primary flex items-center justify-center p-0.5 shrink-0"
                           title="Daily Activity Report logged"
                         >
                           <FileText className="h-2.5 w-2.5" />
@@ -275,7 +275,7 @@ export function CalendarView({
                       )}
                       {holiday && (
                         <span
-                          className="h-2 w-2 rounded-full bg-destructive"
+                          className="h-2 w-2 rounded-full bg-destructive shrink-0"
                           aria-label="Holiday"
                           title={`Holiday: ${holiday.name}`}
                         />
@@ -284,7 +284,7 @@ export function CalendarView({
                   </div>
 
                   {entry && (
-                    <span className="absolute bottom-1.5 right-2 text-[10px] font-mono font-bold bg-card/85 px-1 py-0.5 rounded text-foreground shadow-xs">
+                    <span className="absolute bottom-1.5 right-1 sm:right-2 text-[10px] font-mono font-bold bg-card/85 px-1 py-0.5 rounded text-foreground shadow-xs hidden sm:block">
                       {entry.timeOutMinutes !== null
                         ? minutesToDuration(worked)
                         : "In Progress"}

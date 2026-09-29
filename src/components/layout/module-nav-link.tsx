@@ -109,20 +109,26 @@ export function ModuleNavLink({
 }: ModuleNavLinkProps) {
   let className = "";
   if (compact) {
-    className = `flex flex-col items-center justify-center min-h-[48px] min-w-[56px] px-2 py-1 rounded-xl text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
-      isActive ? "text-emerald-400" : "text-slate-400 hover:text-white"
+    className = `flex flex-col items-center justify-center min-h-[48px] min-w-[56px] px-2 py-1 rounded-xl text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-active-icon)] ${
+      isActive
+        ? "text-[var(--sidebar-active-icon)] font-semibold"
+        : "text-[var(--sidebar-muted)] hover:text-[var(--sidebar-fg)]"
     }`;
   } else if (collapsed) {
-    className = `group relative flex items-center justify-center h-11 w-11 mx-auto rounded-xl motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+    className = `group relative flex items-center justify-center h-11 w-11 mx-auto rounded-xl motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-active-icon)] ${
       isActive
-        ? slidingIndicator ? "text-white font-semibold [&_svg]:text-emerald-400" : "bg-white/[0.12] text-white font-semibold shadow-xs border border-white/15 [&_svg]:text-emerald-400"
-        : "text-slate-400 hover:text-white hover:bg-white/[0.07] active:scale-[0.95]"
+        ? slidingIndicator
+          ? "text-[var(--sidebar-active-fg)] font-semibold [&_svg]:text-[var(--sidebar-active-icon)]"
+          : "bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active-fg)] font-semibold shadow-xs border border-[var(--sidebar-border)] [&_svg]:text-[var(--sidebar-active-icon)]"
+        : "text-[var(--sidebar-muted)] hover:text-[var(--sidebar-fg)] hover:bg-[var(--sidebar-hover-bg)] active:scale-[0.95]"
     }`;
   } else {
-    className = `group relative flex items-center gap-3.5 px-3.5 py-2.5 h-11 text-sm font-medium rounded-xl motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+    className = `group relative flex items-center gap-3.5 px-3.5 py-2.5 h-11 text-sm font-medium rounded-xl motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-active-icon)] ${
       isActive
-        ? slidingIndicator ? "text-white font-semibold [&_svg]:text-emerald-400" : "bg-white/[0.12] text-white font-semibold shadow-xs border border-white/15 backdrop-blur-xs [&_svg]:text-emerald-400"
-        : "text-slate-400 hover:text-white hover:bg-white/[0.07] active:scale-[0.99]"
+        ? slidingIndicator
+          ? "text-[var(--sidebar-active-fg)] font-semibold [&_svg]:text-[var(--sidebar-active-icon)]"
+          : "bg-[var(--sidebar-active-bg)] text-[var(--sidebar-active-fg)] font-semibold shadow-xs border border-[var(--sidebar-border)] [&_svg]:text-[var(--sidebar-active-icon)]"
+        : "text-[var(--sidebar-muted)] hover:text-[var(--sidebar-fg)] hover:bg-[var(--sidebar-hover-bg)] active:scale-[0.99]"
     }`;
   }
 
