@@ -43,6 +43,7 @@ import {
 import { deleteDtrEntryAction } from "../actions/dtr-actions";
 import { notifyActivityChanged } from "@/lib/activity-client";
 import { DtrModal } from "./dtr-modal";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 import type { DtrEntryData } from "../types";
 
 interface DtrViewProps {
@@ -180,7 +181,7 @@ export function DtrView({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300 max-w-5xl">
+    <div className="space-y-8 motion-page max-w-5xl">
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -240,7 +241,7 @@ export function DtrView({
       )}
 
       {/* Totals Summary Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 motion-stagger">
         {/* Weekly Hours */}
         <Card className="border-l-4 border-l-primary shadow-xs">
           <CardHeader className="pb-1.5 pt-4 px-4">
@@ -248,7 +249,7 @@ export function DtrView({
               Week Total Hours
             </CardDescription>
             <CardTitle className="text-2xl sm:text-3xl font-black text-foreground font-mono">
-              {formatWorkedHoursAndMinutes(totalWeekMinutes)}
+              <AnimatedNumber value={totalWeekMinutes} format={(value) => formatWorkedHoursAndMinutes(Math.round(value))} />
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
@@ -265,7 +266,7 @@ export function DtrView({
               Days Logged
             </CardDescription>
             <CardTitle className="text-2xl sm:text-3xl font-black text-foreground font-mono">
-              {daysWorkedCount}{" "}
+              <AnimatedNumber value={daysWorkedCount} format={(value) => String(Math.round(value))} />{" "}
               <span className="text-sm font-normal text-muted-foreground">/ 7 days</span>
             </CardTitle>
           </CardHeader>
@@ -285,7 +286,7 @@ export function DtrView({
               Month Total Hours
             </CardDescription>
             <CardTitle className="text-2xl sm:text-3xl font-black text-foreground font-mono">
-              {formatWorkedHoursAndMinutes(totalMonthMinutes)}
+              <AnimatedNumber value={totalMonthMinutes} format={(value) => formatWorkedHoursAndMinutes(Math.round(value))} />
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
@@ -551,7 +552,7 @@ export function DtrView({
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-black text-foreground font-mono">
-                    {formatWorkedHoursAndMinutes(totalMonthMinutes)}
+                    <AnimatedNumber value={totalMonthMinutes} format={(value) => formatWorkedHoursAndMinutes(Math.round(value))} />
                   </div>
                   <span className="text-xs text-muted-foreground font-mono">
                     {formatWorkedDecimalHours(totalMonthMinutes)} total hours

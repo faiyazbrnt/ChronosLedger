@@ -4,6 +4,7 @@ import * as React from "react";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { Bell, Check, Trash2, X, AlertCircle } from "lucide-react";
 import { useConfirm, useNotify } from "@/components/ui";
+import { usePresence } from "@/components/ui/use-presence";
 import { createClient } from "@/lib/supabase/client";
 import {
   clearNotificationsAction,
@@ -25,6 +26,7 @@ interface NotificationsMenuProps {
 
 export function NotificationsMenu({ userId: initialUserId }: NotificationsMenuProps) {
   const [open, setOpen] = React.useState(false);
+  const { present: menuPresent, exiting: menuExiting } = usePresence(open);
   const [items, setItems] = React.useState<NotificationItem[]>([]);
   const [filter, setFilter] = React.useState<"all" | "unread">("all");
   const [loading, setLoading] = React.useState(false);
@@ -307,11 +309,11 @@ export function NotificationsMenu({ userId: initialUserId }: NotificationsMenuPr
       </button>
 
       {/* Dropdown Overlay with Dimming and Anchored Popover */}
-      {open && (
+      {menuPresent && (
         <>
           {/* Dimming Backdrop Overlay */}
           <div
-            className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-[1px] animate-in fade-in duration-150"
+            className={`fixed inset-0 z-40 bg-foreground/20 backdrop-blur-[1px] motion-modal-backdrop ${menuExiting ? "motion-exiting" : ""}`}
             onClick={close}
             aria-hidden="true"
           />
@@ -322,7 +324,7 @@ export function NotificationsMenu({ userId: initialUserId }: NotificationsMenuPr
             role="dialog"
             aria-modal="true"
             aria-labelledby="notifications-title"
-            className="absolute right-0 top-full mt-2 z-50 flex max-h-[calc(100vh-5.5rem)] w-[calc(100vw-2rem)] max-w-[384px] sm:w-96 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+            className={`absolute right-0 top-full mt-2 z-50 flex max-h-[calc(100vh-5.5rem)] w-[calc(100vw-2rem)] max-w-[384px] sm:w-96 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl motion-popover ${menuExiting ? "motion-exiting" : ""}`}
             onMouseDown={(event) => event.stopPropagation()}
           >
             {/* Header */}

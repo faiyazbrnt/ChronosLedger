@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePresence } from "@/components/ui/use-presence";
 import { Badge } from "@/components/ui/badge";
 import { formatMinorUnits } from "@/lib/money";
 import {
@@ -54,6 +55,7 @@ export function SettingsModal({
   onProfileUpdated,
   onCurrencyUpdated,
 }: SettingsModalProps) {
+  const { present, exiting } = usePresence(isOpen);
   const [activeTab, setActiveTab] = useState<"account" | "currency">("account");
 
   // Profile Form State
@@ -107,7 +109,7 @@ export function SettingsModal({
     };
   }, [isOpen]);
 
-  if (!isOpen || !mounted) return null;
+  if (!present || !mounted) return null;
 
   // Process file upload (validate size & mime, read as Base64 Data URL)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,10 +231,10 @@ export function SettingsModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-modal-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm motion-modal-backdrop ${exiting ? "motion-exiting" : ""}`}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-6 relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-6 relative motion-modal-panel max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

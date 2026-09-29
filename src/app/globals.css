@@ -11,6 +11,24 @@
 */
 
 :root {
+  --motion-press: 140ms;
+  --motion-quick: 180ms;
+  --motion-standard: 240ms;
+  --motion-entrance: 280ms;
+  --motion-count: 700ms;
+  --motion-stagger: 55ms;
+  --motion-distance: 10px;
+  --motion-route-distance: 8px;
+  --motion-list-distance: 8px;
+  --motion-exit-distance: 6px;
+  --motion-hover-distance: 2px;
+  --motion-press-scale: 0.97;
+  --motion-modal-scale-in: 0.96;
+  --motion-modal-scale-out: 0.98;
+  --motion-spring-duration: 500ms;
+  --motion-spring-bounce: 0.16;
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --background: #f4f6f8;
   --foreground: #263238;
   --card: #ffffff;
@@ -119,6 +137,130 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Shared motion system. All movement is visual only and never changes layout. */
+@keyframes motion-enter {
+  from { opacity: 0; transform: translateY(var(--motion-distance)) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes motion-route-enter {
+  from { opacity: 0; transform: translateY(var(--motion-route-distance)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.motion-route {
+  animation: motion-route-enter var(--motion-standard) var(--motion-ease-out) both;
+}
+
+.motion-page > :not([role="dialog"]):not([role="alert"]):not([data-motion-overlay]) {
+  animation: motion-enter var(--motion-entrance) var(--motion-ease-out) both;
+}
+
+.motion-page > :nth-child(2) { animation-delay: var(--motion-stagger); }
+.motion-page > :nth-child(3) { animation-delay: calc(var(--motion-stagger) * 2); }
+.motion-page > :nth-child(4) { animation-delay: calc(var(--motion-stagger) * 3); }
+.motion-page > :nth-child(5) { animation-delay: calc(var(--motion-stagger) * 4); }
+.motion-page > :nth-child(6) { animation-delay: calc(var(--motion-stagger) * 5); }
+
+.motion-stagger > * {
+  animation: motion-enter var(--motion-entrance) var(--motion-ease-out) both;
+}
+.motion-stagger > :nth-child(2) { animation-delay: var(--motion-stagger); }
+.motion-stagger > :nth-child(3) { animation-delay: calc(var(--motion-stagger) * 2); }
+.motion-stagger > :nth-child(4) { animation-delay: calc(var(--motion-stagger) * 3); }
+.motion-stagger > :nth-child(n+5) { animation-delay: calc(var(--motion-stagger) * 4); }
+
+.motion-list > * {
+  animation: motion-enter var(--motion-standard) var(--motion-ease-out) both;
+  transition: transform var(--motion-quick) var(--motion-ease-out), opacity var(--motion-quick) var(--motion-ease-out);
+}
+.motion-list > :nth-child(2) { animation-delay: var(--motion-stagger); }
+.motion-list > :nth-child(3) { animation-delay: calc(var(--motion-stagger) * 2); }
+.motion-list > :nth-child(4) { animation-delay: calc(var(--motion-stagger) * 3); }
+.motion-list > :nth-child(n+5) { animation-delay: calc(var(--motion-stagger) * 4); }
+
+.motion-number { display: inline-grid; font-variant-numeric: tabular-nums; }
+.motion-number > * { grid-area: 1 / 1; }
+.motion-number-placeholder { visibility: hidden; }
+.motion-progress-fill {
+  width: 100%;
+  transform-origin: left center;
+  transition: transform var(--motion-count) var(--motion-ease-out);
+}
+
+.motion-press {
+  transition: transform var(--motion-press) var(--motion-ease-out), opacity var(--motion-quick) ease, background-color var(--motion-quick) ease, color var(--motion-quick) ease;
+}
+.motion-press:active { transform: scale(var(--motion-press-scale)); }
+.motion-press:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.motion-press:focus-visible:active { transform: none; }
+@media (hover: hover) and (pointer: fine) {
+  .motion-press:hover { transform: translateY(-1px); }
+  .motion-press:active { transform: scale(0.97); }
+  .motion-clickable:hover { transform: translateY(calc(-1 * var(--motion-hover-distance))); }
+}
+.motion-clickable { transition: transform var(--motion-quick) var(--motion-ease-out), box-shadow var(--motion-quick) ease; }
+.motion-clickable:active { transform: scale(0.985); }
+
+.motion-modal-backdrop { animation: motion-fade var(--motion-standard) ease both; }
+.motion-modal-panel { animation: motion-modal-enter var(--motion-standard) var(--motion-ease-out) both; transform-origin: center; }
+.motion-exiting { pointer-events: none; animation: motion-fade-out var(--motion-quick) ease both; }
+.motion-exiting .motion-modal-panel { animation: motion-modal-exit var(--motion-quick) var(--motion-ease-out) both; }
+.motion-popover { animation: motion-modal-enter var(--motion-quick) var(--motion-ease-out) both; transform-origin: top right; }
+.motion-popover.motion-exiting { animation: motion-modal-exit var(--motion-quick) var(--motion-ease-out) both; }
+.motion-mobile-drawer { animation: motion-drawer-enter var(--motion-standard) var(--motion-ease-out) both; }
+.motion-exiting .motion-mobile-drawer { animation: motion-drawer-exit var(--motion-quick) var(--motion-ease-out) both; }
+@keyframes motion-drawer-enter { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes motion-drawer-exit { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes motion-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes motion-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes motion-modal-enter { from { opacity: 0; transform: scale(var(--motion-modal-scale-in)) translateY(var(--motion-exit-distance)); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes motion-modal-exit { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(var(--motion-modal-scale-out)); } }
+
+.motion-theme { transition: background-color var(--motion-standard) ease, color var(--motion-standard) ease, border-color var(--motion-standard) ease, box-shadow var(--motion-quick) ease; }
+.motion-theme-icon { transition: transform var(--motion-quick) var(--motion-ease-out), opacity var(--motion-quick) ease; }
+.theme-changing *, .theme-changing *::before, .theme-changing *::after {
+  transition: background-color var(--motion-standard) ease, color var(--motion-standard) ease, border-color var(--motion-standard) ease !important;
+}
+.theme-changing .motion-theme-icon { transition: transform var(--motion-quick) var(--motion-ease-out), opacity var(--motion-quick) ease !important; }
+.motion-sidebar { transition: width var(--motion-standard) var(--motion-ease-in-out); }
+.motion-sidebar-nav { transition: padding var(--motion-standard) var(--motion-ease-in-out); }
+.motion-sidebar-toggle { transform: translateY(-50%); transition: transform var(--motion-press) var(--motion-ease-out), background-color var(--motion-quick) ease, color var(--motion-quick) ease, border-color var(--motion-quick) ease; }
+@media (hover: hover) and (pointer: fine) { .motion-sidebar-toggle:hover { transform: translateY(-50%) scale(1.05); } }
+.motion-sidebar-toggle:active { transform: translateY(-50%) scale(var(--motion-press-scale)); }
+.motion-sidebar-content { transition: padding-left var(--motion-standard) var(--motion-ease-in-out); }
+.motion-active-indicator {
+  position: absolute;
+  top: 0;
+  height: 44px;
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 0.12);
+  border: 1px solid rgb(255 255 255 / 0.15);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  transition: transform var(--motion-standard) var(--motion-ease-in-out), left var(--motion-standard) var(--motion-ease-in-out), right var(--motion-standard) var(--motion-ease-in-out);
+  pointer-events: none;
+}
+.motion-sidebar-nav > a { z-index: 1; }
+
+[data-input-method="keyboard"] .motion-route,
+[data-input-method="keyboard"] .motion-page > *,
+[data-input-method="keyboard"] .motion-stagger > *,
+[data-input-method="keyboard"] .motion-list > * { animation: none; }
+[data-input-method="keyboard"] .motion-modal-panel,
+[data-input-method="keyboard"] .motion-modal-backdrop,
+[data-input-method="keyboard"] .motion-popover,
+[data-input-method="keyboard"] .motion-mobile-drawer { animation: none; }
+[data-input-method="keyboard"] .motion-active-indicator,
+[data-input-method="keyboard"] .motion-press,
+[data-input-method="keyboard"] .motion-theme-icon { transition-duration: 0ms !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-route, .motion-page > *, .motion-stagger > *, .motion-list > *, .motion-modal-panel, .motion-modal-backdrop, .motion-popover, .motion-mobile-drawer { animation: motion-fade var(--motion-quick) ease both; animation-delay: 0ms !important; }
+  .motion-exiting, .motion-exiting .motion-modal-panel, .motion-exiting .motion-mobile-drawer, .motion-popover.motion-exiting { animation: none; }
+  .motion-progress-fill, .motion-press, .motion-clickable, .motion-theme-icon { transition-duration: 0ms !important; }
+  .motion-press:hover, .motion-clickable:hover, .motion-press:active, .motion-clickable:active { transform: none; }
 }
 
 /* Custom scrollbars and utility styling */

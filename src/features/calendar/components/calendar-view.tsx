@@ -152,7 +152,7 @@ export function CalendarView({
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 motion-page">
       {/* Activity Report Modal */}
       <DailyActivityReportModal
         isOpen={isReportModalOpen}
@@ -252,7 +252,7 @@ export function CalendarView({
                   aria-label={label}
                   onClick={() => handleDayClick(key, entry)}
                   style={{ background: fill }}
-                  className={`relative min-h-16 rounded-xl border border-border/50 p-2 text-left text-sm font-semibold text-foreground shadow-sm transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer ${
+                  className={`relative min-h-16 rounded-xl border border-border/50 p-2 text-left text-sm font-semibold text-foreground shadow-sm motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer ${
                     isSameMonth(day, month) ? "" : "opacity-35"
                   } ${
                     dateKey(new Date()) === key

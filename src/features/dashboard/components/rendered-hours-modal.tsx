@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { X, Target, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePresence } from "@/components/ui/use-presence";
 
 interface RenderedHoursModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function RenderedHoursModal({
   onSave,
   onSuccess,
 }: RenderedHoursModalProps) {
+  const { present, exiting } = usePresence(isOpen);
   const [targetValue, setTargetValue] = useState<string>(
     currentTarget ? String(currentTarget) : "300"
   );
@@ -36,7 +38,7 @@ export function RenderedHoursModal({
     }
   }, [isOpen, currentTarget]);
 
-  if (!isOpen) return null;
+  if (!present) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,10 +70,10 @@ export function RenderedHoursModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm motion-modal-backdrop ${exiting ? "motion-exiting" : ""}`}
     >
       <div
-        className="w-full max-w-md bg-background rounded-2xl border border-border shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-background rounded-2xl border border-border shadow-2xl overflow-hidden motion-modal-panel"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

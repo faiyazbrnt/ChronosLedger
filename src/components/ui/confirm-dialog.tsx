@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Button } from "./button";
+import { usePresence } from "./use-presence";
 
 export interface ConfirmOptions {
   title: string;
@@ -17,6 +18,10 @@ const ConfirmContext = React.createContext<Confirm | null>(null);
 
 export function ConfirmDialogProvider({ children }: { children: React.ReactNode }) {
   const [options, setOptions] = React.useState<ConfirmOptions | null>(null);
+  const { present, exiting } = usePresence(Boolean(options));
+  const lastOptions = React.useRef<ConfirmOptions | null>(null);
+  if (options) lastOptions.current = options;
+  const dialogOptions = options ?? lastOptions.current;
   const [isConfirming, setIsConfirming] = React.useState(false);
   const resolver = React.useRef<((value: boolean) => void) | null>(null);
   const cancelRef = React.useRef<HTMLButtonElement>(null);
@@ -84,15 +89,15 @@ export function ConfirmDialogProvider({ children }: { children: React.ReactNode 
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      {options && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <button disabled={isConfirming} aria-label="Cancel confirmation" className="absolute inset-0 bg-foreground/25" onClick={() => close(false)} />
-          <section ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description" className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 shadow-2xl">
-            <h2 id="confirm-title" className="text-lg font-bold text-foreground">{options.title}</h2>
-            <p id="confirm-description" className="mt-2 text-sm text-muted-foreground">{options.description}</p>
+      {present && dialogOptions && (
+        <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 ${exiting ? "motion-exiting" : ""}`}>
+          <button disabled={isConfirming} aria-label="Cancel confirmation" className="absolute inset-0 bg-foreground/25 motion-modal-backdrop" onClick={() => close(false)} />
+          <section ref={dialogRef} role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description" className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 shadow-2xl motion-modal-panel">
+            <h2 id="confirm-title" className="text-lg font-bold text-foreground">{dialogOptions.title}</h2>
+            <p id="confirm-description" className="mt-2 text-sm text-muted-foreground">{dialogOptions.description}</p>
             <div className="mt-6 flex justify-end gap-2">
-              <Button ref={cancelRef} type="button" variant="outline" disabled={isConfirming} onClick={() => close(false)}>{options.cancelLabel ?? "Cancel"}</Button>
-              <Button type="button" variant={options.variant === "destructive" ? "destructive" : "default"} disabled={isConfirming} onClick={handleConfirm}>{isConfirming ? "Working…" : options.confirmLabel ?? "Confirm"}</Button>
+              <Button ref={cancelRef} type="button" variant="outline" disabled={isConfirming} onClick={() => close(false)}>{dialogOptions.cancelLabel ?? "Cancel"}</Button>
+              <Button type="button" variant={dialogOptions.variant === "destructive" ? "destructive" : "default"} disabled={isConfirming} onClick={handleConfirm}>{isConfirming ? "Working…" : dialogOptions.confirmLabel ?? "Confirm"}</Button>
             </div>
           </section>
         </div>

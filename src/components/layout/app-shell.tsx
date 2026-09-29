@@ -15,6 +15,7 @@ import {
 import { ThemeToggle } from "./theme-toggle";
 import { ModuleNavLink } from "./module-nav-link";
 import { Brand } from "@/components/ui/system-logo";
+import { usePresence } from "@/components/ui/use-presence";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -47,7 +48,9 @@ const navItems = [
 
 export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
   const pathname = usePathname();
+  const activeNavIndex = navItems.findIndex((item) => pathname === item.href || pathname?.startsWith(`${item.href}/`));
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { present: mobileMenuPresent, exiting: mobileMenuExiting } = usePresence(isMobileMenuOpen);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -136,11 +139,23 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
     return () => desktopQuery.removeEventListener("change", closeAtDesktop);
   }, []);
 
+  useEffect(() => {
+    const keyboard = () => { document.documentElement.dataset.inputMethod = "keyboard"; };
+    const pointer = () => { document.documentElement.dataset.inputMethod = "pointer"; };
+    window.addEventListener("keydown", keyboard);
+    window.addEventListener("pointerdown", pointer);
+    return () => {
+      window.removeEventListener("keydown", keyboard);
+      window.removeEventListener("pointerdown", pointer);
+      delete document.documentElement.dataset.inputMethod;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen flex bg-background text-foreground">
       {/* Desktop Sidebar Navigation (Hidden on mobile) */}
       <aside
-        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 z-50 bg-[#131b21] dark:bg-[#090d11] text-slate-100 border-r border-slate-800/40 dark:border-white/10 shadow-sm transition-[width] duration-300 ease-in-out ${
+        className={`hidden md:flex md:flex-col md:fixed md:inset-y-0 z-50 bg-[#131b21] dark:bg-[#090d11] text-slate-100 border-r border-slate-800/40 dark:border-white/10 shadow-sm motion-sidebar ${
           isCollapsed ? "md:w-[72px]" : "md:w-64"
         }`}
         aria-label="Desktop Navigation"
@@ -149,7 +164,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
         <button
           type="button"
           onClick={toggleSidebar}
-          className="hidden md:flex absolute -right-3.5 top-1/2 -translate-y-1/2 z-50 h-7 w-7 items-center justify-center rounded-full border border-slate-700/80 bg-[#131b21] text-slate-300 hover:text-white hover:bg-slate-800 hover:border-emerald-500/50 shadow-md transition-all duration-200 hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
+          className="hidden md:flex absolute -right-3.5 top-1/2 z-50 h-7 w-7 items-center justify-center rounded-full border border-slate-700/80 bg-[#131b21] text-slate-300 hover:text-white hover:bg-slate-800 hover:border-emerald-500/50 shadow-md motion-sidebar-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -163,7 +178,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
         <div className="flex flex-col flex-grow pb-4 overflow-y-auto overflow-x-hidden">
           {/* Brand Header */}
           <div
-            className={`h-[65px] shrink-0 border-b border-white/10 flex items-center transition-[padding] duration-300 ${
+            className={`h-[65px] shrink-0 border-b border-white/10 flex items-center motion-sidebar-nav ${
               isCollapsed ? "justify-center px-0" : "px-6"
             }`}
           >
@@ -177,7 +192,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
 
           {/* Navigation Links */}
           <nav
-            className={`mt-6 flex-1 space-y-1.5 transition-[padding] duration-300 ${
+            className={`relative mt-6 flex-1 space-y-1.5 motion-sidebar-nav ${
               isCollapsed ? "px-2" : "px-4"
             }`}
             aria-label="Main Menu"
@@ -193,16 +208,18 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
                   icon={item.icon}
                   isActive={isActive}
                   collapsed={isCollapsed}
+                  slidingIndicator
                 />
               );
             })}
+            {activeNavIndex >= 0 && <span className={`motion-active-indicator !mt-0 ${isCollapsed ? "left-2 right-2" : "left-4 right-4"}`} style={{ transform: `translateY(${activeNavIndex * 50}px)` }} aria-hidden="true" />}
           </nav>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col min-w-0 transition-[padding-left] duration-300 ease-in-out ${
+        className={`flex-1 flex flex-col min-w-0 motion-sidebar-content ${
           isCollapsed ? "md:pl-[72px]" : "md:pl-64"
         }`}
       >
@@ -218,7 +235,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
           <button
             ref={menuButtonRef}
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Open navigation menu"
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-navigation-drawer"
@@ -234,11 +251,11 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
           </div>
         </header>
 
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
+        {mobileMenuPresent && (
+          <div className={`fixed inset-0 z-50 md:hidden ${mobileMenuExiting ? "motion-exiting" : ""}`}>
             <button
               type="button"
-              className="absolute inset-0 bg-foreground/25 backdrop-blur-[1px]"
+              className="absolute inset-0 bg-foreground/25 backdrop-blur-[1px] motion-modal-backdrop"
               aria-label="Close navigation menu"
               onClick={closeMobileMenu}
             />
@@ -248,13 +265,13 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
               role="dialog"
               aria-modal="true"
               aria-label="Mobile navigation"
-              className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-slate-800/40 dark:border-white/10 bg-[#131b21] dark:bg-[#090d11] text-slate-100 p-4 shadow-2xl animate-in slide-in-from-left duration-200 motion-reduce:animate-none"
+              className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-slate-800/40 dark:border-white/10 bg-[#131b21] dark:bg-[#090d11] text-slate-100 p-4 shadow-2xl motion-mobile-drawer"
             >
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <Brand size="sm" href="/dashboard" titleClassName="text-white group-hover:text-emerald-300 transition-colors" />
                 <button
                   type="button"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/10 motion-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Close navigation menu"
                   onClick={closeMobileMenu}
                 >
@@ -290,7 +307,7 @@ export function AppShell({ children, userSlot, headerActions }: AppShellProps) {
           className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 md:p-8 focus:outline-none"
           tabIndex={-1}
         >
-          {children}
+          <div key={pathname} className="motion-route">{children}</div>
         </main>
 
         {/* Mobile Bottom Tab Bar (Touch targets ≥ 44px, sticky bottom) */}
