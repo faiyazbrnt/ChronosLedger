@@ -170,7 +170,7 @@ export function CalendarView({
             Work shifts and Philippine holidays in Asia/Manila. Click any shift to view or edit Daily Activity Reports.
           </p>
         </div>
-        <Button variant="outline" onClick={() => setMonth(new Date())}>
+        <Button variant="outline" onClick={() => setMonth(new Date())} className="motion-press">
           Today
         </Button>
       </div>
@@ -182,6 +182,7 @@ export function CalendarView({
             size="icon"
             aria-label="Previous month"
             onClick={() => setMonth((value) => addMonths(value, -1))}
+            className="motion-press"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -193,6 +194,7 @@ export function CalendarView({
             size="icon"
             aria-label="Next month"
             onClick={() => setMonth((value) => addMonths(value, 1))}
+            className="motion-press"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -215,7 +217,7 @@ export function CalendarView({
           </div>
 
           {/* Month Day Grid */}
-          <div className="grid grid-cols-7 gap-1">
+          <div key={month.toISOString()} className="grid grid-cols-7 gap-1 animate-in fade-in duration-300">
             {days.map((day) => {
               const key = dateKey(day);
               const entry = entriesMap.get(key);
@@ -329,7 +331,7 @@ export function CalendarView({
 
       {/* Selected Day Details Card (Shown when a day is selected) */}
       {selected && (
-        <Card className="animate-in fade-in duration-200">
+        <Card className="animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-md border-primary/20">
           <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
             <div className="space-y-1">
               <p className="font-bold text-base flex items-center gap-2 text-foreground">
@@ -378,7 +380,7 @@ export function CalendarView({
                     });
                     setIsReportModalOpen(true);
                   }}
-                  className="gap-1.5"
+                  className="gap-1.5 motion-press"
                 >
                   <FileText className="h-4 w-4 text-primary" />
                   <span>
@@ -387,7 +389,7 @@ export function CalendarView({
                 </Button>
               ) : (
                 <Link
-                  className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-press"
                   href={`/dtr?date=${selected}`}
                 >
                   Log Shift

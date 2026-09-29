@@ -202,7 +202,7 @@ export function DtrView({
           onClick={() => handleOpenAdd()}
           disabled={!hasRenderedHoursTarget}
           title={!hasRenderedHoursTarget ? "Set your rendered-hours target on the Dashboard first" : undefined}
-          className="gap-2 shrink-0"
+          className="gap-2 shrink-0 motion-press"
         >
           <Plus className="h-4 w-4" />
           <span>New Entry</span>
@@ -214,14 +214,14 @@ export function DtrView({
         <div
           role="alert"
           aria-live="polite"
-          className="p-4 rounded-xl border border-warning/40 bg-warning/10 text-warning flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm"
+          className="p-4 rounded-xl border border-warning/40 bg-warning/10 text-warning flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>Shift logging is disabled. You must set your required rendered-hours target on the Dashboard first.</span>
           </div>
           <Link href="/dashboard">
-            <Button size="sm" variant="outline" className="border-warning/40 hover:bg-warning/20 text-warning shrink-0">
+            <Button size="sm" variant="outline" className="border-warning/40 hover:bg-warning/20 text-warning shrink-0 motion-press">
               Set Target on Dashboard
             </Button>
           </Link>
@@ -233,7 +233,7 @@ export function DtrView({
         <div
           role="alert"
           aria-live="polite"
-          className="p-3.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20"
+          className="p-3.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{actionError}</span>
@@ -330,7 +330,7 @@ export function DtrView({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 motion-press"
                 onClick={() => setSelectedMonday(addWeeks(selectedMonday, -1))}
                 aria-label="Previous week"
               >
@@ -339,7 +339,7 @@ export function DtrView({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs font-semibold"
+                className="h-8 text-xs font-semibold motion-press"
                 onClick={() => setSelectedMonday(currentWeekMonday)}
               >
                 Current Week
@@ -347,7 +347,7 @@ export function DtrView({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-8 w-8 motion-press"
                 onClick={() => setSelectedMonday(addWeeks(selectedMonday, 1))}
                 aria-label="Next week"
               >
@@ -364,10 +364,10 @@ export function DtrView({
               <button
                 type="button"
                 onClick={() => setActiveTab("week")}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all motion-press ${
                   activeTab === "week"
                     ? "bg-card text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 Weekly Schedule
@@ -375,10 +375,10 @@ export function DtrView({
               <button
                 type="button"
                 onClick={() => setActiveTab("month")}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all motion-press ${
                   activeTab === "month"
                     ? "bg-card text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 Monthly Summary
@@ -390,7 +390,7 @@ export function DtrView({
         <CardContent className="p-0">
           {activeTab === "week" ? (
             /* Weekly Breakdown Table/List */
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border motion-list animate-in fade-in duration-300">
               {weekDays.map((dateStr) => {
                 const entry = entriesWithWorkedTime.find((e) => e.workDate === dateStr);
                 const isToday = dateStr === todayStr;
@@ -494,7 +494,7 @@ export function DtrView({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground motion-press"
                             onClick={() => handleOpenEdit(entry)}
                             aria-label={`Edit shift for ${dayName}`}
                           >
@@ -503,7 +503,7 @@ export function DtrView({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 motion-press"
                             onClick={() => handleDelete(entry.id)}
                             disabled={deletingId === entry.id}
                             aria-label={`Delete shift for ${dayName}`}
@@ -527,7 +527,7 @@ export function DtrView({
                           size="sm"
                           disabled={!hasRenderedHoursTarget}
                           onClick={() => handleOpenAdd(dateStr)}
-                          className="h-8 text-xs gap-1.5 border border-dashed border-border hover:border-solid hover:bg-card disabled:opacity-50"
+                          className="h-8 text-xs gap-1.5 border border-dashed border-border hover:border-solid hover:bg-card disabled:opacity-50 motion-press"
                         >
                           <Plus className="h-3.5 w-3.5" />
                           <span>Log Shift</span>
@@ -540,7 +540,7 @@ export function DtrView({
             </div>
           ) : (
             /* Monthly Overview Tab */
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 animate-in fade-in duration-300">
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
                   <h3 className="text-base font-bold text-foreground">
@@ -574,7 +574,7 @@ export function DtrView({
                           <th className="px-4 py-3 font-semibold text-right">Worked Time</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-border/60">
+                      <tbody className="divide-y divide-border/60 motion-list">
                         {monthEntries.map((e) => {
                           const worked = calculateWorkedMinutes({
                             timeInMinutes: e.timeInMinutes,
@@ -615,7 +615,7 @@ export function DtrView({
                   </div>
                   
                   {/* Mobile Card List (hidden on desktop) */}
-                  <div className="grid grid-cols-1 gap-3 md:hidden">
+                  <div className="grid grid-cols-1 gap-3 md:hidden motion-stagger">
                     {monthEntries.map((e) => {
                       const worked = calculateWorkedMinutes({
                         timeInMinutes: e.timeInMinutes,

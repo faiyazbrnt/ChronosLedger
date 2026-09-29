@@ -272,7 +272,7 @@ export function BudgetView({
             variant="outline"
             size="sm"
             onClick={() => setIsAllowanceModalOpen(true)}
-            className="text-xs font-semibold gap-1.5"
+            className="text-xs font-semibold gap-1.5 motion-press"
           >
             <Wallet className="h-3.5 w-3.5" />
             <span>Budget Cycle</span>
@@ -280,7 +280,7 @@ export function BudgetView({
           <Button
             size="sm"
             onClick={handleOpenAddExpense}
-            className="text-xs font-semibold gap-1.5"
+            className="text-xs font-semibold gap-1.5 motion-press"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add Expense</span>
@@ -293,7 +293,7 @@ export function BudgetView({
         <div
           role="alert"
           aria-live="polite"
-          className="p-3.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20"
+          className="p-3.5 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{actionError}</span>
@@ -343,10 +343,10 @@ export function BudgetView({
             role="tab"
             aria-selected={activeTab === "this-week"}
             onClick={() => setActiveTab("this-week")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all motion-press ${
               activeTab === "this-week"
                 ? "bg-primary text-primary-foreground shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}
           >
             <CalendarDays className="h-3.5 w-3.5" />
@@ -357,10 +357,10 @@ export function BudgetView({
             role="tab"
             aria-selected={activeTab === "monthly"}
             onClick={() => setActiveTab("monthly")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all motion-press ${
               activeTab === "monthly"
                 ? "bg-primary text-primary-foreground shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}
           >
             <PieChart className="h-3.5 w-3.5" />
@@ -371,7 +371,7 @@ export function BudgetView({
 
       {/* Tab 1: This Week */}
       {activeTab === "this-week" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-300">
           {/* KPI Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 motion-stagger">
             {/* Allowance Card */}
@@ -397,7 +397,7 @@ export function BudgetView({
                 <button
                   type="button"
                   onClick={() => setIsAllowanceModalOpen(true)}
-                  className="text-xs text-link underline underline-offset-2 hover:opacity-80 transition-opacity cursor-pointer"
+                  className="text-xs text-link underline underline-offset-2 hover:opacity-80 transition-opacity cursor-pointer motion-press"
                 >
                   Configure Cycle & Budget
                 </button>
@@ -543,7 +543,7 @@ export function BudgetView({
                   size="sm"
                   variant="outline"
                   onClick={handleOpenAddExpense}
-                  className="text-xs gap-1.5"
+                  className="text-xs gap-1.5 motion-press"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Add Expense</span>
@@ -553,7 +553,7 @@ export function BudgetView({
 
             <CardContent className="p-0">
               {sortedGroupDates.length > 0 ? (
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border motion-list">
                   {sortedGroupDates.map((dateStr) => {
                     const dayExpenses = groupedExpenses[dateStr] ?? [];
                     const dayTotalMinor = dayExpenses.reduce(
@@ -608,7 +608,7 @@ export function BudgetView({
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                      className="h-7 w-7 text-muted-foreground hover:text-foreground motion-press"
                                       onClick={() => handleOpenEditExpense(exp)}
                                       aria-label="Edit expense"
                                     >
@@ -617,7 +617,7 @@ export function BudgetView({
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                      className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 motion-press"
                                       onClick={() => handleDeleteExpense(exp.id)}
                                       disabled={deletingId === exp.id}
                                       aria-label="Delete expense"
@@ -652,7 +652,7 @@ export function BudgetView({
                     variant="outline"
                     size="sm"
                     onClick={handleOpenAddExpense}
-                    className="gap-1.5"
+                    className="gap-1.5 motion-press"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>Log Expense</span>
@@ -666,7 +666,7 @@ export function BudgetView({
 
       {/* Tab 2: Monthly */}
       {activeTab === "monthly" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-300">
           {/* Monthly KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 motion-stagger">
             <Card className="shadow-xs">

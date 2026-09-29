@@ -175,7 +175,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
             <Button
               variant={renderedHours.hasTarget ? "outline" : "secondary"}
               size="sm"
-              className={`gap-1.5 focus-visible:ring-2 focus-visible:ring-primary ${
+              className={`gap-1.5 motion-press focus-visible:ring-2 focus-visible:ring-primary ${
                 !renderedHours.hasTarget ? "opacity-90 hover:opacity-100 border-amber-500/40 text-amber-900 dark:text-amber-200" : ""
               }`}
             >
@@ -189,7 +189,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
             </Button>
           </Link>
           <Link href="/budget">
-            <Button size="sm" className="gap-1.5 focus-visible:ring-2 focus-visible:ring-primary">
+            <Button size="sm" className="gap-1.5 motion-press focus-visible:ring-2 focus-visible:ring-primary">
               <Wallet className="h-4 w-4" />
               <span>Add Expense</span>
             </Button>
@@ -202,7 +202,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
         <div
           role="alert"
           aria-live="polite"
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 shadow-sm"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-300 shrink-0">
@@ -218,7 +218,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
           <Button
             size="sm"
             onClick={() => setIsTargetModalOpen(true)}
-            className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white border-none shadow-sm gap-1.5"
+            className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white border-none shadow-sm gap-1.5 motion-press"
           >
             <Target className="h-3.5 w-3.5" />
             <span>Set Target Now</span>
@@ -231,7 +231,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
         <div
           role="alert"
           aria-live="polite"
-          className="flex items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive dark:border-destructive/50 dark:bg-destructive/15"
+          className="flex items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive dark:border-destructive/50 dark:bg-destructive/15 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-destructive/20 text-destructive">
@@ -249,7 +249,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
             </div>
           </div>
           <Link href="/budget">
-            <Button variant="outline" size="sm" className="shrink-0 border-destructive/40 hover:bg-destructive/20 text-destructive">
+            <Button variant="outline" size="sm" className="shrink-0 border-destructive/40 hover:bg-destructive/20 text-destructive motion-press">
               Review Expenses
             </Button>
           </Link>
@@ -260,7 +260,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
         <div
           role="alert"
           aria-live="polite"
-          className="flex items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-warning/40 bg-warning/10 text-warning"
+          className="flex items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-warning/40 bg-warning/10 text-warning animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-warning/20 text-warning">
@@ -278,7 +278,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
             </div>
           </div>
           <Link href="/budget">
-            <Button variant="outline" size="sm" className="shrink-0 border-warning/40 hover:bg-warning/20 text-warning">
+            <Button variant="outline" size="sm" className="shrink-0 border-warning/40 hover:bg-warning/20 text-warning motion-press">
               View Budget
             </Button>
           </Link>
@@ -288,7 +288,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 motion-stagger">
         {/* Rendered Hours KPI Card (OJT Progress Tracking) */}
-        <Card className="hover:shadow-md transition-shadow relative overflow-hidden">
+        <Card className="relative overflow-hidden shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground">
               Rendered Hours (OJT)
@@ -355,7 +355,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
         </Card>
 
         {/* Remaining Allowance Card */}
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground">
               {budgetCardTitle}
@@ -416,7 +416,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                 <TrendingUp className="h-3.5 w-3.5 text-primary" />
                 Safe: {formatMinorUnits(weeklyBudget.safeToSpendPerDayMinor, currency)} / day
               </span>
-              <Link href="/budget" className="text-link font-semibold hover:underline flex items-center gap-0.5">
+              <Link href="/budget" className="text-link font-semibold hover:underline flex items-center gap-0.5 motion-press">
                 Budget <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -424,7 +424,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
         </Card>
 
         {/* Sync & Health Overview Card */}
-        <Card className="hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
+        <Card className="sm:col-span-2 lg:col-span-1 shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground">
               Account Overview
@@ -481,7 +481,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
             </div>
 
             <div className="pt-1 flex items-center justify-end text-xs text-muted-foreground border-t border-border/50">
-              <Link href="/dtr" className="text-link font-semibold hover:underline flex items-center gap-0.5">
+              <Link href="/dtr" className="text-link font-semibold hover:underline flex items-center gap-0.5 motion-press">
                 Timesheet <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -492,7 +492,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
       {/* Recent Activity Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 motion-stagger">
         {/* Recent DTR Shifts */}
-        <Card className="flex flex-col">
+        <Card className="flex flex-col shadow-xs">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
@@ -513,7 +513,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                   <div
                     key={shift.id}
                     data-motion-id={shift.id}
-                    className="p-3.5 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                    className="p-3.5 flex items-center justify-between hover:bg-muted/40 transition-colors"
                   >
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
@@ -555,7 +555,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                   Log your daily time record to build your running rendered-hours total.
                 </p>
                 <Link href="/dtr" onClick={handleLogShiftClick} className="inline-block mt-4">
-                  <Button size="sm" variant="outline" className="gap-1.5">
+                  <Button size="sm" variant="outline" className="gap-1.5 motion-press">
                     <PlusCircle className="h-4 w-4" />
                     <span>Log First Shift</span>
                   </Button>
@@ -566,7 +566,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
         </Card>
 
         {/* Recent Expenses */}
-        <Card className="flex flex-col">
+        <Card className="flex flex-col shadow-xs">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
@@ -589,7 +589,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                     <div
                       key={exp.id}
                       data-motion-id={exp.id}
-                      className="p-3.5 flex items-center justify-between hover:bg-muted/30 transition-colors"
+                      className="p-3.5 flex items-center justify-between hover:bg-muted/40 transition-colors"
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
@@ -625,7 +625,7 @@ export function DashboardView({ data, updateTargetAction }: DashboardViewProps) 
                   Track your daily expenses to monitor allowance health and spending rates.
                 </p>
                 <Link href="/budget" className="inline-block mt-4">
-                  <Button size="sm" variant="outline" className="gap-1.5">
+                  <Button size="sm" variant="outline" className="gap-1.5 motion-press">
                     <PlusCircle className="h-4 w-4" />
                     <span>Log First Expense</span>
                   </Button>
