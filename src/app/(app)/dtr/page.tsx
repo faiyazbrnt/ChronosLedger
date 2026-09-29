@@ -3,12 +3,10 @@ import { getAuthUser } from "@/lib/supabase/server";
 import {
   getTodayDateString,
   getMondayOfWeek,
-  parseISODate,
-  addWeeks,
   formatDateToISO,
   isValidDateString,
 } from "@/lib/date";
-import { DtrView, getDtrEntriesForWeek, type DtrEntryData } from "@/features/dtr";
+import { DtrView, getAllDtrEntries, type DtrEntryData } from "@/features/dtr";
 import { getUserSettings } from "@/features/settings";
 
 interface DtrPageProps {
@@ -30,17 +28,9 @@ export default async function DtrPage({ searchParams }: DtrPageProps) {
       ? getMondayOfWeek(weekParam)
       : getMondayOfWeek(todayStr);
 
-  // Preload settings and entries in parallel (spanning 4 weeks before and after for smooth navigation)
-  const rangeStart = parseISODate(addWeeks(activeMonday, -4));
-  const rangeEnd = parseISODate(addWeeks(activeMonday, 5));
-
   const [settings, rawEntries] = await Promise.all([
     getUserSettings(user.id),
-    getDtrEntriesForWeek({
-      userId: user.id,
-      startDate: rangeStart,
-      endDate: rangeEnd,
-    }),
+    getAllDtrEntries(user.id),
   ]);
 
   const serializedEntries: DtrEntryData[] = rawEntries.map((e) => ({

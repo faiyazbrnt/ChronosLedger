@@ -22,10 +22,13 @@ export function calculateRenderedHoursSummary(
     if (raw <= 0) return total;
 
     let breakDeduction = 0;
-    if (entry.breaks && entry.breaks.length > 0) {
-      breakDeduction = entry.breaks.reduce((sum, b) => sum + b.durationMinutes, 0);
+    if (entry.breaks !== undefined && entry.breaks !== null) {
+      breakDeduction = entry.breaks.reduce(
+        (sum, b) => sum + Math.max(0, b.durationMinutes),
+        0
+      );
     } else {
-      breakDeduction = entry.lunchMinutesApplied;
+      breakDeduction = Math.max(0, entry.lunchMinutesApplied);
     }
 
     const net = Math.max(0, raw - breakDeduction);
@@ -64,10 +67,13 @@ export function calculateWeeklyDtrSummary(
     if (raw <= 0) return total;
 
     let breakDeduction = 0;
-    if (entry.breaks && entry.breaks.length > 0) {
-      breakDeduction = entry.breaks.reduce((sum, b) => sum + b.durationMinutes, 0);
+    if (entry.breaks !== undefined && entry.breaks !== null) {
+      breakDeduction = entry.breaks.reduce(
+        (sum, b) => sum + Math.max(0, b.durationMinutes),
+        0
+      );
     } else {
-      breakDeduction = entry.lunchMinutesApplied;
+      breakDeduction = Math.max(0, entry.lunchMinutesApplied);
     }
 
     const net = Math.max(0, raw - breakDeduction);

@@ -145,6 +145,21 @@ describe("Dashboard pure calculations", () => {
       expect(summary.formattedTotalHours).toBe("8h 00m");
     });
 
+    it("applies zero deduction when breaks array is empty even if lunchMinutesApplied is non-zero (matching DTR)", () => {
+      const entries = [
+        {
+          timeInMinutes: 480, // 8:00 AM
+          timeOutMinutes: 1020, // 5:00 PM (540m raw)
+          lunchMinutesApplied: 60, // Legacy column present
+          breaks: [], // Explicitly 0 manual breaks
+        },
+      ];
+
+      const summary = calculateRenderedHoursSummary(entries, 300);
+      expect(summary.totalWorkedMinutes).toBe(540); // 9h 00m
+      expect(summary.formattedTotalHours).toBe("9h 00m");
+    });
+
     it("safely ignores in-progress shifts with timeOutMinutes null", () => {
       const entries = [
         {
