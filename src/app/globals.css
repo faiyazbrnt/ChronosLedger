@@ -12,24 +12,25 @@
 
 :root,
 .light {
-  --motion-press: 140ms;
+  --motion-press: 120ms;
   --motion-quick: 180ms;
-  --motion-standard: 240ms;
-  --motion-entrance: 280ms;
-  --motion-count: 700ms;
-  --motion-stagger: 55ms;
+  --motion-standard: 250ms;
+  --motion-entrance: 300ms;
+  --motion-count: 250ms;
+  --motion-stagger: 40ms;
   --motion-distance: 10px;
   --motion-route-distance: 8px;
   --motion-list-distance: 8px;
   --motion-exit-distance: 6px;
   --motion-hover-distance: 2px;
   --motion-press-scale: 0.97;
-  --motion-modal-scale-in: 0.96;
+  --motion-modal-scale-in: 0.95;
   --motion-modal-scale-out: 0.98;
   --motion-spring-duration: 500ms;
   --motion-spring-bounce: 0.16;
   --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --motion-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --background: #ffffff;
   --foreground: #1e293b;
   --card: #ffffff;
@@ -248,7 +249,7 @@ body {
 
 /* Shared motion system. All movement is visual only and never changes layout. */
 @keyframes motion-enter {
-  from { opacity: 0; transform: translateY(var(--motion-distance)) scale(0.985); }
+  from { opacity: 0; transform: translateY(var(--motion-distance)) scale(0.95); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -298,7 +299,7 @@ body {
 }
 
 .motion-press {
-  transition: transform var(--motion-press) var(--motion-ease-out), opacity var(--motion-quick) ease, background-color var(--motion-quick) ease, color var(--motion-quick) ease;
+  transition: transform var(--motion-press) var(--motion-ease-out), opacity var(--motion-quick) ease, background-color var(--motion-quick) ease, color var(--motion-quick) ease, filter var(--motion-quick) ease;
 }
 .motion-press:active { transform: scale(var(--motion-press-scale)); }
 .motion-press:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
@@ -312,12 +313,12 @@ body {
 .motion-clickable:active { transform: scale(0.985); }
 
 .motion-modal-backdrop { animation: motion-fade var(--motion-standard) ease both; }
-.motion-modal-panel { animation: motion-modal-enter var(--motion-standard) var(--motion-ease-out) both; transform-origin: center; }
+.motion-modal-panel { animation: motion-modal-enter var(--motion-standard) var(--motion-ease-drawer) both; transform-origin: center; }
 .motion-exiting { pointer-events: none; animation: motion-fade-out var(--motion-quick) ease both; }
 .motion-exiting .motion-modal-panel { animation: motion-modal-exit var(--motion-quick) var(--motion-ease-out) both; }
-.motion-popover { animation: motion-modal-enter var(--motion-quick) var(--motion-ease-out) both; transform-origin: top right; }
+.motion-popover { animation: motion-modal-enter var(--motion-quick) var(--motion-ease-out) both; transform-origin: var(--transform-origin, top right); }
 .motion-popover.motion-exiting { animation: motion-modal-exit var(--motion-quick) var(--motion-ease-out) both; }
-.motion-mobile-drawer { animation: motion-drawer-enter var(--motion-standard) var(--motion-ease-out) both; }
+.motion-mobile-drawer { animation: motion-drawer-enter var(--motion-standard) var(--motion-ease-drawer) both; }
 .motion-exiting .motion-mobile-drawer { animation: motion-drawer-exit var(--motion-quick) var(--motion-ease-out) both; }
 @keyframes motion-drawer-enter { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 @keyframes motion-drawer-exit { from { transform: translateX(0); } to { transform: translateX(-100%); } }
